@@ -1,285 +1,196 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Analysis script for pregnancy risk prediction.
-Reusable functions and main pipeline.
-"""
-
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy.stats import skew, kurtosis
-from sklearn.model_selection import train_test_split, cross_validate, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
-                             roc_auc_score, confusion_matrix)
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
+import joblib
 
-# ==============================
-# Data loading and preprocessing
-# ==============================
-
-def load_data(filepath):
-    """Load dataset from CSV."""
-    return pd.read_csv(filepath)
-
-def convert_temperature(df, col='tjelesna_temp'):
-    """Convert Fahrenheit to Celsius."""
-    df[col] = ((df[col] - 32) * 5/9).round(2)
-    return df
-
-def impute_numerical(df, skewness_dict, threshold=1.0):
+class PregnancyRiskPredictor:
     """
-    Impute missing values for numerical columns based on skewness.
-    If |skew| > threshold -> median, else mean.
+    A pipeline for predicting pregnancy risk level (High/Low) based on maternal health data.
     """
-    for var, skew_val in skewness_dict.items():
-        if var not in df.columns:
-            continue
-        if abs(skew_val) > threshold:
-            fill_val = df[var].median(skipna=True)
-        else:
-            fill_val = df[var].mean(skipna=True)
-        df[var] = df[var].fillna(fill_val)
-    return df
 
-def impute_categorical_mode(df, col):
-    """Impute missing categorical values with mode."""
-    mode_val = df[col].mode()[0]
-    df[col] = df[col].fillna(mode_val)
-    return df
+    def __init__(self, model=None, scaler=None, feature_columns=None):
+        self.model = model
+        self.scaler = scaler
+        self.feature_columns = feature_columns
+        self.skewness_dict = {
+            'sistolicki_krvni_tlak': 0.2571,
+            'dijastolicki_krvni_tlak': 0.3772,
+            'glukoza_u_krvi': 1.5781,
+            'BMI': 0.4574,
+            'komplikacije_u_proslosti': 1.7071,
+            'dijabetes': 0.9339,
+            'otkucaji_srca': 0.2097
+        }
 
-def encode_target(df, col='nivo_rizika', mapping=None):
-    """Encode target variable: map High->1, Low->0."""
-    if mapping is None:
-        mapping = {'High': 1, 'Low': 0}
-    df[col] = df[col].map(mapping)
-    return df
+    def load_data(self, filepath):
+        """Load dataset from CSV."""
+        df = pd.read_csv(filepath)
+        return df
 
-def preprocess_data(df):
-    """
-    Full preprocessing pipeline:
-    - temperature conversion
-    - imputation (numerical based on skewness, categorical with mode)
-    - encode target
-    - return features X and target y
-    """
-    # Convert temperature
-    df = convert_temperature(df)
+    def preprocess(self, df, fit_scaler=False):
+        """
+        Apply all necessary preprocessing steps.
+        - Convert Fahrenheit to Celsius
+        - Impute missing numeric values (mean/median based on skewness)
+        - Drop rows missing target
+        - Encode target (High->1, Low->0)
+        - Remove outlier (age 325) and restrict age 15-50
+        - Optionally fit a StandardScaler on features (for later use)
+        Returns processed X, y.
+        """
+        df = df.copy()
 
-    # Skewness values (pre‑computed or compute on the fly)
-    skewness_dict = {
-        'sistolicki_krvni_tlak': 0.2571,
-        'dijastolicki_krvni_tlak': 0.3772,
-        'glukoza_u_krvi': 1.5781,
-        'BMI': 0.4574,
-        'komplikacije_u_proslosti': 1.7071,
-        'dijabetes': 0.9339,
-        'otkucaji_srca': 0.2097
-    }
-    df = impute_numerical(df, skewness_dict, threshold=1.0)
+        # Convert temperature
+        df['tjelesna_temp'] = ((df['tjelesna_temp'] - 32) * 5/9).round(2)
 
-    # Impute categorical target with mode
-    df = impute_categorical_mode(df, 'nivo_rizika')
-
-    # Encode target
-    df = encode_target(df, 'nivo_rizika')
-
-    # Separate features and target
-    X = df.drop(columns=['nivo_rizika'])
-    y = df['nivo_rizika']
-    return X, y
-
-# ==============================
-# Model evaluation utilities
-# ==============================
-
-def evaluate_classifier(model, X_train, y_train, X_test, y_test):
-    """Train and evaluate classifier, return metrics dictionary."""
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else None
-
-    metrics = {
-        "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred, zero_division=0),
-        "Recall": recall_score(y_test, y_pred, zero_division=0),
-        "F1 Score": f1_score(y_test, y_pred, zero_division=0),
-        "ROC AUC": roc_auc_score(y_test, y_proba) if y_proba is not None else None
-    }
-    return metrics, y_pred, y_proba
-
-def cross_validate_classifier(model, X, y, cv=5):
-    """Perform 5‑fold cross‑validation and return mean scores."""
-    scoring = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
-    scores = cross_validate(model, X, y, cv=cv, scoring=scoring)
-    results = {f"test_{metric}": scores[f"test_{metric}"].mean() for metric in scoring}
-    return results
-
-def get_classifiers():
-    """Return dictionary of classifiers (some wrapped with scaler)."""
-    classifiers = {
-        "Logistic Regression": LogisticRegression(max_iter=1000),
-        "Decision Tree": DecisionTreeClassifier(random_state=42),
-        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
-        "Gradient Boosting": GradientBoostingClassifier(n_estimators=100, random_state=42),
-        "Naive Bayes": GaussianNB()
-    }
-    # Models that need scaling
-    scaled_models = {
-        "SVM (RBF)": Pipeline([('scaler', StandardScaler()),
-                               ('svm', SVC(probability=True, random_state=42))]),
-        "k-NN (k=5)": Pipeline([('scaler', StandardScaler()),
-                                ('knn', KNeighborsClassifier(n_neighbors=5))])
-    }
-    return {**classifiers, **scaled_models}
-
-# ==============================
-# Visualization functions
-# ==============================
-
-def plot_histograms(df, numeric_cols, figsize=(15, 10), layout=(4, 3)):
-    """Plot histograms for given numeric columns."""
-    df[numeric_cols].hist(bins=15, figsize=figsize, layout=layout,
-                          color='skyblue', edgecolor='black')
-    plt.suptitle('Raspodjela numeričkih varijabli – histogrami', fontsize=16, y=1.02)
-    plt.tight_layout()
-    plt.show()
-
-def plot_density_curves(df, cont_cols, figsize=(16, 8), subplot_shape=(2, 4)):
-    """Plot density curves (KDE) for continuous variables."""
-    fig, axes = plt.subplots(*subplot_shape, figsize=figsize)
-    axes = axes.flatten()
-    for i, var in enumerate(cont_cols):
-        sns.histplot(df[var], kde=True, bins=20, ax=axes[i], color='coral')
-        axes[i].set_title(var)
-    for j in range(len(cont_cols), len(axes)):
-        axes[j].set_visible(False)
-    plt.suptitle('Distribucija s KDE (procjena gustoće vjerojatnosti)', fontsize=14)
-    plt.tight_layout()
-    plt.show()
-
-def plot_correlation_heatmap(df, figsize=(14, 10)):
-    """Plot correlation heatmap."""
-    corr = df.corr(numeric_only=True)
-    plt.figure(figsize=figsize)
-    sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
-    plt.title('Korelacijska matrica varijabli trudnoće')
-    plt.show()
-
-def plot_pie_chart(df, col):
-    """Plot pie chart for a categorical variable."""
-    data = df[col].dropna()
-    data.value_counts().plot(kind='pie', autopct='%1.1f%%',
-                             colors=['#66b3ff','#ff9999'],
-                             startangle=90, explode=(0.05, 0))
-    plt.title(f'Distribucija {col} (bez missing vrijednosti)')
-    plt.ylabel('')
-    plt.show()
-
-def plot_confusion_matrices(models, X_train, X_test, y_train, y_test, scaler=None):
-    """
-    Plot confusion matrices for all models.
-    If scaler is None, uses original X_train, X_test; otherwise scales them.
-    """
-    n_models = len(models)
-    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
-    axes = axes.flatten()
-
-    for idx, (name, model) in enumerate(models.items()):
-        # Use scaled data if model is SVM or k-NN
-        if scaler and name in ["SVM (RBF)", "k-NN (k=5)"]:
-            X_tr = scaler.fit_transform(X_train)
-            X_te = scaler.transform(X_test)
-        else:
-            X_tr, X_te = X_train, X_test
-
-        model.fit(X_tr, y_train)
-        y_pred = model.predict(X_te)
-        cm = confusion_matrix(y_test, y_pred)
-
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[idx],
-                    xticklabels=['Low', 'High'], yticklabels=['Low', 'High'])
-        axes[idx].set_title(name)
-        axes[idx].set_xlabel('Predicted')
-        axes[idx].set_ylabel('Actual')
-
-    for j in range(len(models), len(axes)):
-        axes[j].axis('off')
-    plt.tight_layout()
-    plt.show()
-
-# ==============================
-# Main execution
-# ==============================
-
-def main():
-    # 1. Load and preprocess
-    df = load_data('datasets/dataset1.csv')
-    X, y = preprocess_data(df)
-
-    # 2. Train / test split (stratified)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=0, stratify=y
-    )
-
-    # 3. Optionally scale for models that need it (done inside classifiers pipeline)
-    #    but we keep original for logistic, tree, etc.
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-
-    # 4. Get classifiers
-    classifiers = get_classifiers()
-
-    # 5. Evaluate each model on test set
-    results = {}
-    for name, clf in classifiers.items():
-        print(f"\nEvaluacija: {name}")
-        if name in ["SVM (RBF)", "k-NN (k=5)"]:
-            metrics, _, _ = evaluate_classifier(clf, X_train_scaled, y_train,
-                                                 X_test_scaled, y_test)
-        else:
-            metrics, _, _ = evaluate_classifier(clf, X_train, y_train,
-                                                 X_test, y_test)
-        results[name] = metrics
-        for metric, value in metrics.items():
-            if value is not None:
-                print(f"  {metric}: {value:.4f}")
+        # Impute numeric columns based on skewness
+        for var, skew_val in self.skewness_dict.items():
+            if var not in df.columns:
+                continue
+            if abs(skew_val) > 1:
+                fill_value = df[var].median(skipna=True)
             else:
-                print(f"  {metric}: nije podržan")
+                fill_value = df[var].mean(skipna=True)
+            df[var] = df[var].fillna(fill_value)
 
-    # 6. Cross‑validation on entire dataset
-    print("\n--- CROSS-VALIDATION (5-fold) ---")
-    for name, clf in classifiers.items():
-        print(f"\n{name}:")
-        cv_res = cross_validate_classifier(clf, X, y, cv=5)
-        for k, v in cv_res.items():
-            print(f"  {k}: {v:.4f}")
+        # Drop rows where target is missing
+        df = df.dropna(subset=['nivo_rizika'])
 
-    # 7. Confusion matrices (using scaled data for SVM/k‑NN)
-    plot_confusion_matrices(classifiers, X_train, X_test, y_train, y_test, scaler)
+        # Encode target
+        df['nivo_rizika'] = df['nivo_rizika'].map({'High': 1, 'Low': 0})
 
-    # 8. Visualisations (optional)
-    # Uncomment if needed:
-    # numeric_cols = [col for col in X.columns if X[col].dtype in ['int64','float64']]
-    # plot_histograms(df, numeric_cols)
-    # cont_cols = ['dob', 'sistolicki_krvni_tlak', 'dijastolicki_krvni_tlak',
-    #              'glukoza_u_krvi', 'tjelesna_temp', 'BMI', 'otkucaji_srca']
-    # plot_density_curves(df, cont_cols)
-    # plot_correlation_heatmap(df)
-    # plot_pie_chart(df, 'nivo_rizika')
+        # Remove age outlier (325) and restrict age range 15-50
+        df = df[df['dob'] != 325]
+        df = df[(df['dob'] >= 15) & (df['dob'] <= 50)]
 
-    # 9. Output best model
-    best_model = max(results.keys(), key=lambda k: results[k]['F1 Score'])
-    print(f"\nNajbolji algoritam po F1 score: {best_model}")
+        # Separate features and target
+        X = df.drop(columns=['nivo_rizika'])
+        y = df['nivo_rizika']
 
+        # Store feature names
+        self.feature_columns = X.columns.tolist()
+
+        # Optionally fit scaler (for models that need scaling, though Gradient Boosting does not)
+        if fit_scaler:
+            self.scaler = StandardScaler()
+            X_scaled = self.scaler.fit_transform(X)
+            return X_scaled, y
+        else:
+            return X, y
+
+    def train(self, X, y, model_params=None):
+        """Train a Gradient Boosting classifier."""
+        if model_params is None:
+            model_params = {'n_estimators': 100, 'random_state': 42}
+        self.model = GradientBoostingClassifier(**model_params)
+        self.model.fit(X, y)
+        return self.model
+
+    def evaluate(self, X_test, y_test):
+        """Evaluate the trained model on a test set."""
+        if self.model is None:
+            raise ValueError("Model not trained yet. Call train() first.")
+        y_pred = self.model.predict(X_test)
+        y_proba = self.model.predict_proba(X_test)[:, 1]
+        metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred),
+            'recall': recall_score(y_test, y_pred),
+            'f1': f1_score(y_test, y_pred),
+            'roc_auc': roc_auc_score(y_test, y_proba),
+            'confusion_matrix': confusion_matrix(y_test, y_pred)
+        }
+        return metrics
+
+    def cross_validate(self, X, y, cv=5):
+        """Perform stratified cross-validation and return scores."""
+        if self.model is None:
+            self.model = GradientBoostingClassifier(n_estimators=100, random_state=42)
+        scoring = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
+        cv_results = cross_validate(self.model, X, y, cv=cv, scoring=scoring, return_train_score=False)
+        results = {f'mean_{m}': np.mean(cv_results[f'test_{m}']) for m in scoring}
+        results.update({f'std_{m}': np.std(cv_results[f'test_{m}']) for m in scoring})
+        return results
+
+    def predict(self, X_new):
+        """Predict risk for new samples. X_new must have same columns as training data."""
+        if self.model is None:
+            raise ValueError("Model not trained.")
+        # If scaler exists, apply it (though not needed for Gradient Boosting, kept for consistency)
+        if self.scaler is not None:
+            X_new = self.scaler.transform(X_new)
+        return self.model.predict(X_new)
+
+    def predict_proba(self, X_new):
+        """Return probability of High risk (class 1)."""
+        if self.model is None:
+            raise ValueError("Model not trained.")
+        if self.scaler is not None:
+            X_new = self.scaler.transform(X_new)
+        return self.model.predict_proba(X_new)[:, 1]
+
+    def feature_importance(self):
+        """Return feature importance DataFrame."""
+        if self.model is None:
+            raise ValueError("Model not trained.")
+        imp = pd.DataFrame({
+            'Feature': self.feature_columns,
+            'Importance': self.model.feature_importances_
+        }).sort_values('Importance', ascending=False)
+        return imp
+
+    def save_model(self, filepath):
+        """Save model and scaler to disk."""
+        joblib.dump({'model': self.model, 'scaler': self.scaler, 'feature_columns': self.feature_columns}, filepath)
+
+    def load_model(self, filepath):
+        """Load model and scaler from disk."""
+        data = joblib.load(filepath)
+        self.model = data['model']
+        self.scaler = data['scaler']
+        self.feature_columns = data['feature_columns']
+
+
+# ======================= Example usage =======================
 if __name__ == "__main__":
-    main()
+    # Initialize predictor
+    predictor = PregnancyRiskPredictor()
+
+    # Load and preprocess data
+    df = predictor.load_data('datasets/dataset1.csv')
+    X, y = predictor.preprocess(df, fit_scaler=False)   # scaler not needed for tree-based model
+
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, stratify=y)
+
+    # Train model
+    predictor.train(X_train, y_train)
+
+    # Evaluate on test set
+    metrics = predictor.evaluate(X_test, y_test)
+    print("Test set performance:")
+    for k, v in metrics.items():
+        if k != 'confusion_matrix':
+            print(f"  {k}: {v:.4f}")
+    print("Confusion matrix:\n", metrics['confusion_matrix'])
+
+    # Cross-validation
+    cv_results = predictor.cross_validate(X, y, cv=5)
+    print("\n5-fold CV results:")
+    for k in ['mean_accuracy', 'mean_precision', 'mean_recall', 'mean_f1', 'mean_roc_auc']:
+        print(f"  {k}: {cv_results[k]:.4f} (+/- {cv_results[k.replace('mean','std')]:.4f})")
+
+    # Feature importance
+    print("\nFeature importance:")
+    print(predictor.feature_importance())
+
+    # Save model for later use
+    predictor.save_model('pregnancy_risk_model.pkl')
+
+    # Load model (example)
+    predictor2 = PregnancyRiskPredictor()
+    predictor2.load_model('pregnancy_risk_model.pkl')
+    # Now predictor2 can be used for predictions on new data
