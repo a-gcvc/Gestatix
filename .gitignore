@@ -1,0 +1,25 @@
+# Jupyter Notebook
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Okruženje (Virtual Environments)
+venv/
+env/
+.env
+
+# API keys
+.env
+keys.txt
+
+# Windows trash
+Thumbs.db
+desktop.ini
+
+# Flask/Python instances
+instance/
+.pytest_cache/
