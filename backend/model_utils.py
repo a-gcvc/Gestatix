@@ -1,58 +1,45 @@
 """
 model_utils.py
-Pomocne funkcije za ucitavanje modela i predikciju.
+Pomocne funkcije za ucitavanje Random Forest modela i predikciju.
 """
 
 import joblib
 import numpy as np
 import pandas as pd
 
-# Globalni objekti (ucitavaju se jednom) - Global objects (loaded once)
 _model = None
 _label_encoder = None
 _feature_cols = None
 
+
 def load_model_artifacts():
-    """Ucitava model, label encoder i feature kolone."""
+    """Ucitava Random Forest model, label encoder i feature kolone."""
     global _model, _label_encoder, _feature_cols
     
     if _model is None:
-        _model = joblib.load('models/gb_model.pkl')
-        _label_encoder = joblib.load('models/label_encoder.pkl')
-        _feature_cols = joblib.load('models/feature_cols.pkl')
+        _model = joblib.load('models/rf_model.pkl')
+        _label_encoder = joblib.load('models/label_encoder_rf.pkl')
+        _feature_cols = joblib.load('models/feature_cols_rf.pkl')
     
     return _model, _label_encoder, _feature_cols
 
 
 def preprocess_input(data_dict):
-    """
-    Pretvara input dictionary u DataFrame spreman za predikciju.
-    
-    Očekivani kljucevi:
-    - dob
-    - sistolicki_krvni_tlak
-    - dijastolicki_krvni_tlak
-    - glukoza_u_krvi
-    - tjelesna_temp
-    - BMI
-    - komplikacije_u_proslosti (0/1)
-    - dijabetes (0/1)
-    - gestacijski_dijabetes (0/1)
-    - mentalno_zdravlje (0/1)
-    - otkucaji_srca
-    """
+    """Pretvara input dictionary u DataFrame spreman za predikciju."""
     
     _, _, feature_cols = load_model_artifacts()
     
-    # Provjera da li svi feature-ovi postoje - Check if all features are present
     missing = set(feature_cols) - set(data_dict.keys())
     if missing:
         raise ValueError(f"Nedostajuci feature-ovi: {missing}")
     
-    # Kreiranje DataFrame-a - Creating DataFrame
     input_df = pd.DataFrame([{col: data_dict.get(col) for col in feature_cols}])
     
-    # Konverzija u numeric - Convert to numeric
+    # Konverzija temperature (Fahrenheit → Celsius)
+    if 'tjelesna_temp' in input_df.columns:
+        if input_df['tjelesna_temp'].iloc[0] > 50:
+            input_df['tjelesna_temp'] = ((input_df['tjelesna_temp'] - 32) * 5/9).round(2)
+    
     for col in feature_cols:
         input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
     
@@ -62,25 +49,65 @@ def preprocess_input(data_dict):
 def predict_risk(data_dict):
     """
     Vraca predikciju rizika za jedan unos.
-    Returns: dict sa risk_label i confidence (ako je moguce)
     """
     model, label_encoder, _ = load_model_artifacts()
     
     input_df = preprocess_input(data_dict)
     
-    # Predikcija - Prediction
+    # Predikcija (vraća 0 ili 1)
     prediction = model.predict(input_df)[0]
     probabilities = model.predict_proba(input_df)[0]
     
-    risk_label = label_encoder.inverse_transform([prediction])[0]
+    # Label encoder ima: 0=High, 1=Low
+    # Preokrećemo za intuitivan output: 0=Low, 1=High
+    if prediction == 0:
+        # 0 originalno znači High
+        risk_label = 'High'
+        risk_code = 1
+    else:
+        # 1 originalno znači Low
+        risk_label = 'Low'
+        risk_code = 0
+    
+    # Preokreni vjerovatnoće
+    # probabilities[0] = vjerovatnoća za High
+    # probabilities[1] = vjerovatnoća za Low
+    high_prob = probabilities[0]
+    low_prob = probabilities[1]
+    
     confidence = float(max(probabilities))
     
     return {
         'risk_level': risk_label,
-        'risk_code': int(prediction),
+        'risk_code': risk_code,  # 0=Low, 1=High
         'confidence': confidence,
         'probabilities': {
-            'Low': float(probabilities[0]),
-            'High': float(probabilities[1])
+            'Low': float(low_prob),
+            'High': float(high_prob)
         }
+    }
+
+
+def predict_batch(data_list):
+    """Vraca predikcije za vise unosa."""
+    results = []
+    for data in data_list:
+        try:
+            results.append(predict_risk(data))
+        except Exception as e:
+            results.append({'error': str(e), 'input': data})
+    return results
+
+
+def get_model_info():
+    """Vraca informacije o ucitanom modelu."""
+    model, label_encoder, feature_cols = load_model_artifacts()
+    
+    return {
+        'model_type': 'RandomForestClassifier',
+        'n_estimators': model.n_estimators,
+        'max_depth': model.max_depth,
+        'n_features': len(feature_cols),
+        'feature_names': feature_cols,
+        'encoder_classes': list(label_encoder.classes_)  # ['High', 'Low']
     }
