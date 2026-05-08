@@ -1,25 +1,110 @@
+# =====================
 # Jupyter Notebook
+# =====================
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
+*.ipynb
 
+# =====================
 # Python cache
+# =====================
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
+# =====================
 # Okruženje (Virtual Environments)
+# =====================
 venv/
 env/
 .env
+.venv
+ENV/
+env.bak/
+venv.bak/
 
-# API keys
+# =====================
+# API keys i osjetljivi podaci
+# =====================
 .env
 keys.txt
+secrets.py
+config.py
+*.key
+*.pem
 
-# Windows trash
+# =====================
+# Windows / OS specifično
+# =====================
 Thumbs.db
 desktop.ini
+.DS_Store
+*.log
 
+# =====================
 # Flask/Python instances
+# =====================
 instance/
 .pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Modeli (trenirani ML modeli - mogu biti veliki)
+models/
+*.pkl
+*.joblib
+*.h5
+*.pth
+*.pt
+model_*.pkl
+
+# Chroma vektorska baza (MOŽE BITI VEOMA VELIKA!)
+chroma_db/
+chroma/
+*.chroma
+chroma.sqlite3
+
+# PDF dokumenti (ako su pod autorskim pravima)
+documents/*.pdf
+*.pdf
+!requirements.pdf  # ako imaš neki javni dokument koji želiš share-ovati
+
+# Uploadovani fajlovi (ako korisnici upload-uju PDF-ove)
+uploads/
+temp/
+tmp/
+
+# Backup fajlovi
+*.bak
+*.backup
+*.old
+
+# Log fajlovi
+*.log
+logs/
+
+# Dataset (ako je veliki ili osjetljiv)
+data/*.csv
+*.csv
+!sample_data.csv   # ako želiš share-ovati mali sample
+
+# SQLite baze (ako ih koristiš)
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE specifično
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
