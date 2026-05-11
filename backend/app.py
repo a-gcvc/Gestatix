@@ -9,10 +9,12 @@ import numpy as np
 
 from model_utils import predict_risk, get_model_info
 from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
+from feedback_manager import get_feedback_manager, FeedbackManager
 
 app = Flask(__name__)
 CORS(app)
 
+feedback_manager = get_feedback_manager()
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -135,6 +137,100 @@ def predict_with_rag():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/feedback/submit', methods=['POST'])
+def submit_feedback():
+    """
+    Endpoint za prikupljanje feedback-a od korisnika.
+    """
+    try:
+        data = request.get_json()
+        
+        input_data = data.get('input_data', {})
+        original_risk = data.get('original_risk')
+        user_agrees = data.get('user_agrees', False)
+        
+        if not input_data or not original_risk:
+            return jsonify({'error': 'Nedostaju potrebni podaci'}), 400
+        
+        # Dodaj feedback
+        result = feedback_manager.add_feedback(input_data, original_risk, user_agrees)
+        
+        # Ako se korisnik ne slaže, potrebno je unijeti tačan rizik
+        if not user_agrees:
+            correct_risk = data.get('correct_risk')
+            if correct_risk:
+                feedback_manager.update_feedback_risk(input_data, correct_risk)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/feedback/stats', methods=['GET'])
+def feedback_stats():
+    """Endpoint za statistiku feedback sistema."""
+    try:
+        stats = feedback_manager.get_stats()
+        return jsonify(stats), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/feedback/retrain', methods=['POST'])
+def retrain_model_endpoint():
+    """
+    Endpoint za ručno pokretanje retraining-a modela.
+    """
+    try:
+        data = request.get_json() or {}
+        force = data.get('force', False)
+        
+        result = feedback_manager.retrain_model(force=force)
+        return jsonify(result), 200 if result['success'] else 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/predict_with_feedback', methods=['POST'])
+def predict_with_feedback():
+    """
+    Kombinovani endpoint: predikcija + opcioni feedback.
+    Ovo je proširena verzija /predict_with_rag koja također prikuplja feedback.
+    """
+    try:
+        data = request.get_json()
+        
+        # 1. Predikcija rizika
+        prediction_result = predict_risk(data)
+        
+        # 2. RAG preporuke
+        advice_text = get_relevant_advice_rag(
+            query_context=f"Trudnoća sa nivoom rizika {prediction_result['risk_level']}",
+            patient_data=data,
+            n_results=4
+        )
+        
+        response = {
+            'risk': prediction_result,
+            'rag_recommendations': advice_text,
+            'input_data': data,
+            'model_used': 'RandomForestClassifier'
+        }
+        
+        # 3. Ako je feedback zahtijevan, dodaj feedback ID
+        if data.get('request_feedback', False):
+            response['feedback_id'] = datetime.now().timestamp()
+            response['feedback_prompt'] = {
+                'question': 'Da li se slažete sa procjenom rizika?',
+                'options': ['Da', 'Ne'],
+                'if_no': 'Molimo unesite tačan nivo rizika (Low/High)'
+            }
+        
+        return jsonify(response), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("="*60)

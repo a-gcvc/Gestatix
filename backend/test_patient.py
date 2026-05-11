@@ -6,9 +6,13 @@ Unosite podatke o pacijentici i dobijate predikciju rizika + preporuke iz PDF do
 
 import sys
 import json
+import requests
+import json
+import time
 from model_utils import predict_risk
 from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
 
+BASE_URL = "http://localhost:5000"
 
 def print_separator(char="=", length=60):
     """Ispisuje separator liniju."""
@@ -291,6 +295,234 @@ def run_test_scenarios():
             print(f"   Preporuka: {first_advice[:150]}...")
         print()
 
+def test_feedback_flow():
+    """Testira kompletan feedback flow."""
+    
+    print("\n" + "="*60)
+    print("  TESTIRANJE FEEDBACK SISTEMA")
+    print("="*60)
+    
+    # Test podaci
+    test_patient = {
+        "dob": 30,
+        "sistolicki_krvni_tlak": 150,
+        "dijastolicki_krvni_tlak": 95,
+        "glukoza_u_krvi": 9.2,
+        "tjelesna_temp": 98.6,
+        "BMI": 32,
+        "komplikacije_u_proslosti": 0,
+        "dijabetes": 0,
+        "gestacijski_dijabetes": 1,
+        "mentalno_zdravlje": 0,
+        "otkucaji_srca": 85
+    }
+    
+    # 1. Prvo predikcija
+    print("\n1. Predikcija rizika...")
+    response = requests.post(f"{BASE_URL}/predict", json=test_patient)
+    result = response.json()
+    print(f"   Predikcija: {result['risk']['risk_level']}")
+    print(f"   Pouzdanost: {result['risk']['confidence']:.2%}")
+    
+    # 2. Simuliraj feedback (korisnik se slaže)
+    print("\n2. Slanje feedback-a (korisnik se slaže)...")
+    feedback_data = {
+        "input_data": test_patient,
+        "original_risk": result['risk']['risk_level'],
+        "user_agrees": True
+    }
+    response = requests.post(f"{BASE_URL}/feedback/submit", json=feedback_data)
+    
+    if response.status_code == 200:
+        print(f"   Odgovor: {response.json()}")
+    else:
+        print(f"   Greška: {response.status_code} - {response.text}")
+        return
+    
+    # 3. Statistika
+    print("\n3. Statistika feedback sistema...")
+    response = requests.get(f"{BASE_URL}/feedback/stats")
+    
+    if response.status_code == 200:
+        stats = response.json()
+        print(f"   Ukupno feedback-a: {stats.get('total_feedback', 0)}")
+        print(f"   Slaže se sa modelom: {stats.get('agreed_with_model', 0)}")
+        print(f"   Nova za retrain: {stats.get('new_samples_pending', 0)}/{stats.get('retrain_threshold', 10)}")
+        
+        # 4. Ako ima dovoljno, retrain
+        if stats.get('needs_retraining', False):
+            print("\n4. Pokretanje retraining-a...")
+            response = requests.post(f"{BASE_URL}/feedback/retrain", json={"force": True})
+            if response.status_code == 200:
+                print(f"   Rezultat: {response.json()}")
+            else:
+                print(f"   Greška: {response.text}")
+        else:
+            needed = stats.get('retrain_threshold', 10) - stats.get('new_samples_pending', 0)
+            print(f"\n4. Potrebno još {needed} primjera za retrain")
+    else:
+        print(f"   Greška pri dobijanju statistike: {response.status_code}")
+    
+    print("\n" + "="*60)
+    print("  TEST ZAVRŠEN")
+    print("="*60)
+
+
+def test_feedback_flow():
+    """Testira kompletan feedback flow."""
+    
+    print("\n" + "="*60)
+    print("  TESTIRANJE FEEDBACK SISTEMA")
+    print("="*60)
+    
+    # Test podaci
+    test_patient = {
+        "dob": 30,
+        "sistolicki_krvni_tlak": 150,
+        "dijastolicki_krvni_tlak": 95,
+        "glukoza_u_krvi": 9.2,
+        "tjelesna_temp": 98.6,
+        "BMI": 32,
+        "komplikacije_u_proslosti": 0,
+        "dijabetes": 0,
+        "gestacijski_dijabetes": 1,
+        "mentalno_zdravlje": 0,
+        "otkucaji_srca": 85
+    }
+    
+    # 1. Prvo predikcija
+    print("\n1. Predikcija rizika...")
+    response = requests.post(f"{BASE_URL}/predict", json=test_patient)
+    if response.status_code != 200:
+        print(f"   Greška: {response.status_code} - {response.text}")
+        return
+    
+    result = response.json()
+    print(f"   Predikcija: {result['risk']['risk_level']}")
+    print(f"   Pouzdanost: {result['risk']['confidence']:.2%}")
+    
+    # 2. Simuliraj feedback (korisnik se slaže)
+    print("\n2. Slanje feedback-a (korisnik se slaže)...")
+    feedback_data = {
+        "input_data": test_patient,
+        "original_risk": result['risk']['risk_level'],
+        "user_agrees": True
+    }
+    response = requests.post(f"{BASE_URL}/feedback/submit", json=feedback_data)
+    
+    if response.status_code == 200:
+        print(f"   Odgovor: {response.json()}")
+    else:
+        print(f"   Greška: {response.status_code} - {response.text}")
+        return
+    
+    # 3. Statistika
+    print("\n3. Statistika feedback sistema...")
+    response = requests.get(f"{BASE_URL}/feedback/stats")
+    
+    if response.status_code == 200:
+        stats = response.json()
+        print(f"   Ukupno feedback-a: {stats.get('total_feedback', 0)}")
+        print(f"   Slaže se sa modelom: {stats.get('agreed_with_model', 0)}")
+        print(f"   Nova za retrain: {stats.get('new_samples_pending', 0)}/{stats.get('retrain_threshold', 10)}")
+        
+        if stats.get('needs_retraining', False):
+            print("\n4. Pokretanje retraining-a...")
+            response = requests.post(f"{BASE_URL}/feedback/retrain", json={"force": True})
+            if response.status_code == 200:
+                print(f"   Rezultat: {response.json()}")
+            else:
+                print(f"   Greška: {response.text}")
+        else:
+            needed = stats.get('retrain_threshold', 10) - stats.get('new_samples_pending', 0)
+            print(f"\n4. Potrebno još {needed} primjera za retrain")
+    else:
+        print(f"   Greška pri dobijanju statistike: {response.status_code}")
+    
+    print("\n" + "="*60)
+    print("  TEST ZAVRŠEN")
+    print("="*60)
+
+
+def test_disagreement_flow():
+    """Testira flow kada se korisnik ne slaže."""
+    
+    print("\n" + "="*60)
+    print("  TESTIRANJE FEEDBACK-A (KORISNIK SE NE SLAŽE)")
+    print("="*60)
+    
+    test_patient = {
+        "dob": 25,
+        "sistolicki_krvni_tlak": 110,
+        "dijastolicki_krvni_tlak": 70,
+        "glukoza_u_krvi": 5.2,
+        "tjelesna_temp": 98.6,
+        "BMI": 22,
+        "komplikacije_u_proslosti": 0,
+        "dijabetes": 0,
+        "gestacijski_dijabetes": 0,
+        "mentalno_zdravlje": 0,
+        "otkucaji_srca": 75
+    }
+    
+    # Predikcija
+    response = requests.post(f"{BASE_URL}/predict", json=test_patient)
+    if response.status_code != 200:
+        print(f"Greška pri predikciji: {response.status_code}")
+        return
+    
+    result = response.json()
+    print(f"Predikcija: {result['risk']['risk_level']}")
+    
+    # Feedback - korisnik se ne slaže, kaže da je High rizik
+    feedback_data = {
+        "input_data": test_patient,
+        "original_risk": result['risk']['risk_level'],
+        "user_agrees": False,
+        "correct_risk": "High"
+    }
+    response = requests.post(f"{BASE_URL}/feedback/submit", json=feedback_data)
+    if response.status_code == 200:
+        print(f"Feedback poslan: {response.json()}")
+    else:
+        print(f"Greška: {response.status_code} - {response.text}")
+
+
+def test_disagreement_flow():
+    """Testira flow kada se korisnik ne slaže."""
+    
+    print("\n" + "="*60)
+    print("  TESTIRANJE FEEDBACK-A (KORISNIK SE NE SLAŽE)")
+    print("="*60)
+    
+    test_patient = {
+        "dob": 25,
+        "sistolicki_krvni_tlak": 110,
+        "dijastolicki_krvni_tlak": 70,
+        "glukoza_u_krvi": 5.2,
+        "tjelesna_temp": 98.6,
+        "BMI": 22,
+        "komplikacije_u_proslosti": 0,
+        "dijabetes": 0,
+        "gestacijski_dijabetes": 0,
+        "mentalno_zdravlje": 0,
+        "otkucaji_srca": 75
+    }
+    
+    # Predikcija
+    response = requests.post(f"{BASE_URL}/predict", json=test_patient)
+    result = response.json()
+    print(f"Predikcija: {result['risk']['risk_level']}")
+    
+    # Feedback - korisnik se ne slaže, kaže da je High rizik
+    feedback_data = {
+        "input_data": test_patient,
+        "original_risk": result['risk']['risk_level'],
+        "user_agrees": False,
+        "correct_risk": "High"
+    }
+    response = requests.post(f"{BASE_URL}/feedback/submit", json=feedback_data)
+    print(f"Feedback poslan: {response.json()}")
 
 def main():
     """Glavna funkcija za testiranje."""
@@ -401,3 +633,5 @@ def display_recommendations(advice_text, risk_level):
 
 if __name__ == "__main__":
     main()
+    test_feedback_flow()
+    test_disagreement_flow()
