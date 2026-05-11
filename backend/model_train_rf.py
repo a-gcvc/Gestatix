@@ -195,6 +195,21 @@ def train_model():
     joblib.dump(label_encoder, 'models/label_encoder_rf.pkl')
     joblib.dump(feature_cols, 'models/feature_cols_rf.pkl')
     
+    # Kreiraj feedback CSV fajl ako ne postoji
+    feedback_csv_path = 'models/feedback_data.csv'
+    if not os.path.exists(feedback_csv_path):
+        feedback_df = pd.DataFrame(columns=feature_cols + [
+            'feedback_risk', 'original_prediction', 'user_confirmation', 'timestamp', 'trained'
+        ])
+        feedback_df.to_csv(feedback_csv_path, index=False)
+        print(f"\n✅ Kreiran feedback fajl: {feedback_csv_path}")
+
+    # Sačuvaj verziju modela
+    with open('models/model_version.txt', 'w') as f:
+        f.write(f"Version: 1.0\n")
+        f.write(f"Trained: {pd.Timestamp.now()}\n")
+        f.write(f"Samples: {len(X_train) + len(X_test)}\n")
+
     print(f"\n{'='*60}")
     print("  MODEL SAVED")
     print('='*60)
