@@ -1,0 +1,213 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Gestatix | Asistent u bezbrižnoj trudnoći</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Uvodna sekcija - Hero -->
+    <section id="hero-section" class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-icon">
+                <i class="fas fa-baby-carriage"></i>
+            </div>
+            <h1>Gestatix</h1>
+            <p class="hero-subtitle">Tvoj asistent u bezbrižnoj trudnoći</p>
+            <p class="hero-description">Unesi svoje zdravstvene podatke, a mi ćemo ti pružiti procjenu rizika i personalizovane preporuke na osnovu kliničkog vodiča.</p>
+            <button id="start-journey-btn" class="btn-start">
+                <i class="fas fa-feather-alt"></i>
+                Započni svoje putovanje
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <div class="hero-flowers">
+            <div class="flower flower-1"></div>
+            <div class="flower flower-2"></div>
+            <div class="flower flower-3"></div>
+            <div class="flower flower-4"></div>
+        </div>
+    </section>
+
+    <!-- Glavna aplikacija - forma (inicijalno skrivena) -->
+    <main id="app-main" style="display: none;">
+        <div class="container">
+            <!-- Header forme -->
+            <div class="form-header">
+                <button id="back-to-home" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Početna
+                </button>
+                <h2><i class="fas fa-notes-medical"></i> Procjena zdravstvenog rizika</h2>
+                <p>Molimo unesite sve podatke za tačnu procjenu</p>
+            </div>
+
+            <!-- Forma -->
+            <form id="risk-form">
+                <div class="form-grid">
+                  <!-- Lični podaci -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user-friends"></i> Lični podaci</h3>
+                        <div class="input-group">
+                            <label for="dob">Dob (godine)</label>
+                            <input type="number" id="dob" name="dob" min="15" max="60" step="1" required placeholder="npr. 28">
+                            <span class="error-message" id="dob-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="height">Visina (cm)</label>
+                            <input type="number" id="height" name="height" min="100" max="220" step="1" required placeholder="npr. 165">
+                            <span class="error-message" id="height-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="weight">Težina (kg)</label>
+                            <input type="number" id="weight" name="weight" min="30" max="200" step="0.1" required placeholder="npr. 65.5">
+                            <span class="error-message" id="weight-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- Vitalni parametri -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-heartbeat"></i> Vitalni parametri</h3>
+                        <div class="input-row">
+                            <div class="input-group half">
+                                <label for="systolic">Sistolicki pritisak (mmHg)</label>
+                                <input type="number" id="systolic" name="systolic" min="70" max="200" step="1" required placeholder="npr. 120">
+                                <span class="error-message" id="systolic-error"></span>
+                            </div>
+                            <div class="input-group half">
+                                <label for="diastolic">Dijastolicki pritisak (mmHg)</label>
+                                <input type="number" id="diastolic" name="diastolic" min="40" max="130" step="1" required placeholder="npr. 80">
+                                <span class="error-message" id="diastolic-error"></span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="glucose">Glukoza u krvi (mmol/L)</label>
+                            <input type="number" id="glucose" name="glucose" min="2" max="20" step="0.1" required placeholder="npr. 5.2">
+                            <span class="error-message" id="glucose-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="temperature">Tjelesna temperatura (°C)</label>
+                            <input type="number" id="temperature" name="temperature" min="35" max="40" step="0.1" required placeholder="npr. 36.6">
+                            <span class="error-message" id="temperature-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="heart_rate">Otkucaji srca (bpm)</label>
+                            <input type="number" id="heart_rate" name="heart_rate" min="50" max="150" step="1" required placeholder="npr. 75">
+                            <span class="error-message" id="heartrate-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- Medicinska historija -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-notes-medical"></i> Medicinska historija</h3>
+                        <div class="input-group">
+                            <label for="complications">Komplikacije u prošlim trudnoćama</label>
+                            <select id="complications" name="complications" required>
+                                <option value="" disabled selected>-- Odaberite --</option>
+                                <option value="0">Ne</option>
+                                <option value="1">Da</option>
+                            </select>
+                            <span class="error-message" id="complications-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="diabetes">Dijabetes (postojeći)</label>
+                            <select id="diabetes" name="diabetes" required>
+                                <option value="" disabled selected>-- Odaberite --</option>
+                                <option value="0">Ne</option>
+                                <option value="1">Da</option>
+                            </select>
+                            <span class="error-message" id="diabetes-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="gdm">Gestacijski dijabetes</label>
+                            <select id="gdm" name="gdm" required>
+                                <option value="" disabled selected>-- Odaberite --</option>
+                                <option value="0">Ne</option>
+                                <option value="1">Da</option>
+                            </select>
+                            <span class="error-message" id="gdm-error"></span>
+                        </div>
+                        <div class="input-group">
+                            <label for="mental">Mentalno zdravlje (depresija/anksioznost)</label>
+                            <select id="mental" name="mental" required>
+                                <option value="" disabled selected>-- Odaberite --</option>
+                                <option value="0">Ne</option>
+                                <option value="1">Da</option>
+                            </select>
+                            <span class="error-message" id="mental-error"></span>
+                        </div>
+                    </div>
+                                </div>  <!-- Zatvaranje form-grid -->
+                
+                <!-- Dugmad za akciju -->
+                <div class="form-actions">
+                    <button type="reset" class="btn-reset"><i class="fas fa-eraser"></i> Resetuj formu</button>
+                    <button type="submit" class="btn-submit"><i class="fas fa-chart-line"></i> Procijeni rizik</button>
+                </div>
+            </form>  <!-- OVDJE ZATVORITE FORMU -->
+            
+
+            <!-- Rezultati predikcije (inicijalno skriveni) -->
+            <div id="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2><i class="fas fa-chart-simple"></i> Rezultati procjene</h2>
+                    <button id="new-assessment" class="btn-new"><i class="fas fa-plus-circle"></i> Nova procjena</button>
+                </div>
+                
+                <!-- Risk indikator -->
+                <div class="risk-card" id="risk-card">
+                    <div class="risk-level">
+                        <i id="risk-icon" class="fas fa-circle-info"></i>
+                        <span id="risk-text">Nivo rizika: </span>
+                    </div>
+                    <div class="risk-confidence">
+                        Pouzdanost predikcije: <span id="confidence-value">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="confidence-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Vjerovatnoća rizika</h3>
+                        <canvas id="riskChart" width="300" height="300"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Važnost ključnih faktora</h3>
+                        <canvas id="featureChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dodatne informacije: RAG preporuke -->
+                <div class="rag-section">
+                    <button id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
+                    <div id="rag-content" style="display: none;">
+                        <div class="rag-header">
+                            <i class="fas fa-graduation-cap"></i> Prema Kliničkom vodiču za antenatalnu zaštitu (2021.)
+                        </div>
+                        <div id="rag-recommendations" class="rag-text">
+                            <!-- RAG preporuke će se učitati ovdje -->
+                        </div>
+                        <p class="rag-note"><i class="fas fa-link"></i> Izvor: <a href="https://fmoh.gov.ba/uploads/files/1.%20Klinicki%20vodic%20za%20antenatalnu%20zastitu%20LAT%20FINAL%20WEB.pdf" target="_blank">Klinički vodič za antenatalnu zaštitu</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Analiziram podatke...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
