@@ -6,15 +6,24 @@ Flask API za predikciju rizika trudnoće koristeći Random Forest model i RAG pr
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
+from datetime import datetime
 
 from model_utils import predict_risk, get_model_info
 from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
 from feedback_manager import get_feedback_manager, FeedbackManager
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 feedback_manager = get_feedback_manager()
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -191,6 +200,36 @@ def retrain_model_endpoint():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/model/features', methods=['GET'])
+def get_feature_importance():
+    """Endpoint za dohvatanje feature importance iz modela."""
+    try:
+        import joblib
+        import numpy as np
+        
+        model = joblib.load('models/rf_model.pkl')
+        feature_cols = joblib.load('models/feature_cols_rf.pkl')
+        
+        feature_importance = model.feature_importances_
+        
+        # Sortiraj po važnosti (opadajuće)
+        sorted_indices = np.argsort(feature_importance)[::-1]
+        
+        result = {
+            'labels': [feature_cols[i] for i in sorted_indices],
+            'values': [feature_importance[i] for i in sorted_indices],
+            'percentages': [feature_importance[i] * 100 for i in sorted_indices]
+        }
+        
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Greška pri učitavanju feature importance: {e}")
+        # Fallback vrijednosti ako model nije dostupan
+        return jsonify({
+            'labels': ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
+            'values': [0.2262, 0.2159, 0.1464, 0.1438, 0.0959],
+            'percentages': [22.62, 21.59, 14.64, 14.38, 9.59]
+        }), 200
 
 @app.route('/predict_with_feedback', methods=['POST'])
 def predict_with_feedback():
@@ -231,6 +270,8 @@ def predict_with_feedback():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
 
 if __name__ == '__main__':
     print("="*60)

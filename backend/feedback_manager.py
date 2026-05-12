@@ -257,6 +257,59 @@ class FeedbackManager:
             'needs_retraining': bool(self.new_samples_count >= self.retrain_threshold)
         }
 
+def _save_model_version(self, version_info=None):
+    """Čuva informacije o verziji modela."""
+    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
+    
+    if version_info is None:
+        version_info = {
+            'version': self._get_next_version(),
+            'timestamp': datetime.now().isoformat(),
+            'total_samples': len(self.feedback_data),
+            'feedback_samples': len(self.feedback_data[self.feedback_data['feedback_risk'].notna()]) if len(self.feedback_data) > 0 else 0
+        }
+    
+    with open(version_file, 'w') as f:
+        f.write(f"Model Version: {version_info['version']}\n")
+        f.write(f"Trained: {version_info['timestamp']}\n")
+        f.write(f"Total Samples: {version_info['total_samples']}\n")
+        f.write(f"Feedback Samples: {version_info['feedback_samples']}\n")
+    
+    print(f"✅ Verzija modela sačuvana: {version_info['version']}")
+
+def _get_next_version(self):
+    """Dohvata sljedeći broj verzije."""
+    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
+    
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            for line in f:
+                if line.startswith('Model Version:'):
+                    current = line.split(':')[1].strip()
+                    try:
+                        # Ako je verzija broj (npr. 1, 2, 3...)
+                        next_version = int(current) + 1
+                        return str(next_version)
+                    except ValueError:
+                        # Ako je verzija u formatu v1.0, v2.0...
+                        import re
+                        match = re.search(r'(\d+)', current)
+                        if match:
+                            next_version = int(match.group(1)) + 1
+                            return f"v{next_version}.0"
+        return "2.0"
+    else:
+        return "1.0"
+
+def _load_model_version(self):
+    """Učitava informacije o verziji modela."""
+    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
+    
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            content = f.read()
+        return content
+    return "No version info available"
 
 # Globalna instanca
 _feedback_manager = None

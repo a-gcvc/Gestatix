@@ -21,17 +21,70 @@
             <h1>Gestatix</h1>
             <p class="hero-subtitle">Tvoj asistent u bezbrižnoj trudnoći</p>
             <p class="hero-description">Unesi svoje zdravstvene podatke, a mi ćemo ti pružiti procjenu rizika i personalizovane preporuke na osnovu kliničkog vodiča.</p>
-            <button id="start-journey-btn" class="btn-start">
-                <i class="fas fa-feather-alt"></i>
-                Započni svoje putovanje
-                <i class="fas fa-arrow-right"></i>
-            </button>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button id="start-journey-btn" class="btn-start">
+                    <i class="fas fa-feather-alt"></i>
+                    Započni svoje putovanje
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="how-it-works-btn" class="btn-how" style="background: transparent; border: 2px solid #e91e63; color: #e91e63; padding: 14px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-question-circle"></i>
+                    Kako Gestatix radi?
+                </button>
+            </div>
         </div>
         <div class="hero-flowers">
             <div class="flower flower-1"></div>
             <div class="flower flower-2"></div>
             <div class="flower flower-3"></div>
             <div class="flower flower-4"></div>
+        </div>
+    </section>
+
+    <!-- STAL ciklus informativna stranica -->
+    <section id="stal-section" style="display: none; min-height: 100vh; padding: 4rem 2rem; background: linear-gradient(135deg, #fff5f8, #ffe4ed);">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <button id="back-to-hero-from-stal" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Nazad na početnu
+                </button>
+                <h2 style="color: #ad1457;"><i class="fas fa-sync-alt"></i> Kako Gestatix radi?</h2>
+            </div>
+
+            <!-- STAL ciklus -->
+            <div class="stal-cycle" style="margin: 2rem 0; padding: 2rem; background: linear-gradient(135deg, #fce4ec, #fff0f3); border-radius: 28px;">
+                <h3 style="color: #ad1457; text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fas fa-sync-alt"></i> STAL ciklus - Sense, Think, Act, Learn
+                </h3>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div class="cycle-step" data-step="sense" style="flex: 1; text-align: center; padding: 1rem; border-radius: 16px; background: #ffe0e8; cursor: pointer;">
+                        <i class="fas fa-database" style="font-size: 2rem; color: #e91e63;"></i>
+                        <div style="font-weight: bold; font-size: 1.2rem;">1. SENSE</div>
+                        <small>Prikupljanje podataka</small>
+                    </div>
+                    <div class="cycle-step" data-step="think" style="flex: 1; text-align: center; padding: 1rem; border-radius: 16px; background: #f8d0dc; cursor: pointer;">
+                        <i class="fas fa-brain" style="font-size: 2rem; color: #e91e63;"></i>
+                        <div style="font-weight: bold; font-size: 1.2rem;">2. THINK</div>
+                        <small>Analiza i predikcija</small>
+                    </div>
+                    <div class="cycle-step" data-step="act" style="flex: 1; text-align: center; padding: 1rem; border-radius: 16px; background: #ffe0e8; cursor: pointer;">
+                        <i class="fas fa-bullhorn" style="font-size: 2rem; color: #e91e63;"></i>
+                        <div style="font-weight: bold; font-size: 1.2rem;">3. ACT</div>
+                        <small>Preporuke i akcije</small>
+                    </div>
+                    <div class="cycle-step" data-step="learn" style="flex: 1; text-align: center; padding: 1rem; border-radius: 16px; background: #f8d0dc; cursor: pointer;">
+                        <i class="fas fa-graduation-cap" style="font-size: 2rem; color: #e91e63;"></i>
+                        <div style="font-weight: bold; font-size: 1.2rem;">4. LEARN</div>
+                        <small>Učenje iz feedback-a</small>
+                    </div>
+                </div>
+                <div id="cycle-description" style="margin-top: 1.5rem; padding: 1rem; background: white; border-radius: 16px; font-size: 0.95rem; color: #4a3b3f;">
+                    <i class="fas fa-info-circle"></i> Kliknite na svaku fazu za detaljno objašnjenje.
+                </div>
+            </div>
+
+            <!-- STAL ciklus statistika -->
+            <div id="stal-stats" style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #7a5d66;"></div>
         </div>
     </section>
 
@@ -48,9 +101,9 @@
             </div>
 
             <!-- Forma -->
-            <form id="risk-form">
+            <form id="risk-form" onsubmit="return false;">
                 <div class="form-grid">
-                  <!-- Lični podaci -->
+                    <!-- Lični podaci -->
                     <div class="form-section">
                         <h3><i class="fas fa-user-friends"></i> Lični podaci</h3>
                         <div class="input-group">
@@ -142,15 +195,14 @@
                             <span class="error-message" id="mental-error"></span>
                         </div>
                     </div>
-                                </div>  <!-- Zatvaranje form-grid -->
-                
+                </div>
+
                 <!-- Dugmad za akciju -->
                 <div class="form-actions">
                     <button type="reset" class="btn-reset"><i class="fas fa-eraser"></i> Resetuj formu</button>
                     <button type="submit" class="btn-submit"><i class="fas fa-chart-line"></i> Procijeni rizik</button>
                 </div>
-            </form>  <!-- OVDJE ZATVORITE FORMU -->
-            
+            </form>
 
             <!-- Rezultati predikcije (inicijalno skriveni) -->
             <div id="results-section" style="display: none;">
@@ -158,7 +210,7 @@
                     <h2><i class="fas fa-chart-simple"></i> Rezultati procjene</h2>
                     <button id="new-assessment" class="btn-new"><i class="fas fa-plus-circle"></i> Nova procjena</button>
                 </div>
-                
+
                 <!-- Risk indikator -->
                 <div class="risk-card" id="risk-card">
                     <div class="risk-level">
@@ -185,6 +237,26 @@
                     </div>
                 </div>
 
+                <!-- Feedback dugmad -->
+                <div class="feedback-section" style="margin-top: 2rem; padding: 1rem; background: #fff0f3; border-radius: 20px;">
+                    <h4 style="color: #ad1457; margin-bottom: 1rem;"><i class="fas fa-heart"></i> Povratna informacija</h4>
+                    <p style="margin-bottom: 1rem;">Da li je ova procjena bila korisna i tačna?</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" id="feedback-yes" class="btn-feedback" style="background: #4caf50; color: white; padding: 10px 25px; border: none; border-radius: 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-thumbs-up"></i> Da, tačna je
+                        </button>
+                        <button type="button" id="feedback-no" class="btn-feedback" style="background: #f44336; color: white; padding: 10px 25px; border: none; border-radius: 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-thumbs-down"></i> Ne, nije tačna
+                        </button>
+                    </div>
+                    <div id="feedback-message" style="margin-top: 1rem; font-size: 0.9rem; text-align: center; color: #ad1457; display: none;"></div>
+                </div>
+
+                <!-- Statistika feedback-a -->
+                <div id="feedback-stats" style="margin-top: 1rem; font-size: 0.8rem; text-align: center; color: #7a5d66; display: none;">
+                    <i class="fas fa-chart-simple"></i> <span id="stats-text"></span>
+                </div>
+
                 <!-- Dodatne informacije: RAG preporuke -->
                 <div class="rag-section">
                     <button id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
@@ -201,6 +273,13 @@
             </div>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="background: #2d1f24; color: #f8ced9; text-align: center; padding: 1.5rem; margin-top: auto;">
+        <div class="container">
+            <p>&copy; 2026 Gestatix. Sva prava zadržana (All rights reserved).</p>
+        </div>
+    </footer>
 
     <!-- Loading overlay -->
     <div id="loading-overlay" class="loading-overlay" style="display: none;">

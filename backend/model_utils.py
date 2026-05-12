@@ -47,45 +47,38 @@ def preprocess_input(data_dict):
 
 
 def predict_risk(data_dict):
-    """
-    Vraca predikciju rizika za jedan unos.
-    """
+    """Vraca predikciju rizika za jedan unos."""
     model, label_encoder, _ = load_model_artifacts()
     
     input_df = preprocess_input(data_dict)
     
-    # Predikcija (vraća 0 ili 1)
     prediction = model.predict(input_df)[0]
     probabilities = model.predict_proba(input_df)[0]
     
     # Label encoder ima: 0=High, 1=Low
-    # Preokrećemo za intuitivan output: 0=Low, 1=High
     if prediction == 0:
-        # 0 originalno znači High
         risk_label = 'High'
         risk_code = 1
     else:
-        # 1 originalno znači Low
         risk_label = 'Low'
         risk_code = 0
     
-    # Preokreni vjerovatnoće
-    # probabilities[0] = vjerovatnoća za High
-    # probabilities[1] = vjerovatnoća za Low
     high_prob = probabilities[0]
     low_prob = probabilities[1]
-    
     confidence = float(max(probabilities))
     
-    return {
+    result = {
         'risk_level': risk_label,
-        'risk_code': risk_code,  # 0=Low, 1=High
+        'risk_code': risk_code,
         'confidence': confidence,
         'probabilities': {
             'Low': float(low_prob),
             'High': float(high_prob)
         }
     }
+    
+    print(f"DEBUG predict_risk: {result}")  # Dodajte ovu liniju za debug
+    return result
 
 
 def predict_batch(data_list):
