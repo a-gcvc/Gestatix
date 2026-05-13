@@ -273,16 +273,5 @@ def predict_with_feedback():
     
 
 
-if __name__ == '__main__':
-    print("="*60)
-    print("  PREGNANCY RISK PREDICTION API (Random Forest)")
-    print("="*60)
-    print("\nAvailable endpoints:")
-    print("  GET  /health              - Provjera statusa API-ja")
-    print("  POST /predict            - Predikcija rizika")
-    print("  POST /predict_batch      - Batch predikcija")
-    print("  POST /rag/search         - Semantička pretraga baze")
-    print("  POST /predict_with_rag   - Predikcija + RAG preporuke")
-    print("\n" + "="*60)
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == '__main__':    
+    app.run(debug=True, port=5000)

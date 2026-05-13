@@ -1,5 +1,3 @@
-// script.js
-
 // API base URL
 const API_BASE = 'http://127.0.0.1:5000';
 
@@ -25,13 +23,7 @@ const howItWorksBtn = document.getElementById('how-it-works-btn');
 const backToHeroFromStal = document.getElementById('back-to-hero-from-stal');
 
 // Prikaz STAL stranice
-howItWorksBtn?.addEventListener('click', () => {
-    heroSection.style.display = 'none';
-    stalSection.style.display = 'block';
-    appMain.style.display = 'none';
-    initStalCycle();
-    loadStalStats();
-});
+
 
 // Provjera API statusa pri pokretanju aplikacije
 async function checkAPIStatus() {
@@ -42,16 +34,16 @@ async function checkAPIStatus() {
         });
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ API je dostupan na', API_BASE);
+            console.log('API je dostupan na', API_BASE);
             console.log('Model info:', data.model_info);
             return true;
         } else {
-            console.error('❌ API vratio status:', response.status);
+            console.error('API vratio status:', response.status);
             return false;
         }
     } catch (err) {
-        console.error('❌ Greška pri povezivanju na API:',  err.message);
-        console.warn('⚠️ API nije dostupan. Provjerite:');
+        console.error('Greška pri povezivanju na API:',  err.message);
+        console.warn('API nije dostupan. Provjerite:');
         console.warn('1. Da li je backend pokrenut: cd backend && python app.py');
         console.warn('2. Da li je pokrenut na http://127.0.0.1:5000');
         console.warn('3. Konzolu za više detalja');
@@ -60,7 +52,7 @@ async function checkAPIStatus() {
 }
 
 // Pozovite na početku
-checkAPIStatus();
+
 
 // Helper: Prikaz/ sakrivanje loadinga
 function showLoading(show) {
@@ -513,6 +505,8 @@ async function sendFeedback(userAgrees, correctRisk = null) {
         const messageDiv = document.getElementById('feedback-message');
         
         if (result.success) {
+            heroSection.style.display = 'none';
+            appMain.style.display = 'block';
             messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Hvala na povratnoj informaciji! Pomažete nam da poboljšamo model.';
             messageDiv.style.display = 'block';
             messageDiv.style.color = '#2e7d32';
@@ -575,10 +569,10 @@ async function triggerRetraining() {
         const result = await response.json();
         
         if (result.success) {
-            alert(`✅ Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
+            alert(`Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
             loadFeedbackStats();
         } else {
-            alert(`⚠️ ${result.message}`);
+            alert(`${result.message}`);
         }
     } catch (err) {
         console.error('Retraining greška:', err);
@@ -586,18 +580,32 @@ async function triggerRetraining() {
     }
 }
 
-async function submitAssessment() {
+async function submitAssessment(event) {
+    // 1. Primarna zaštita od osvježavanja stranice i duplih okidanja
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation(); 
+    }
+
     console.log('submitAssessment pozvana');
     
+    // Resetuj prethodne greške u UI-u ako postoje
+    const existingErr = document.getElementById('api-error-banner');
+    if (existingErr) existingErr.remove();
+
+    // 2. Provjera validacije
     if (!validateForm()) {
         console.log('Validacija nije prošla');
         return;
     }
     
+    // Prikaži loading animaciju
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
     showLoading(true);
+
     const payload = getFormData();
     
-    // Provjeri da li payload sadrži sve potrebne podatke
+    // Provjera integriteta podataka (Missing fields check)
     const requiredFields = ['dob', 'sistolicki_krvni_tlak', 'dijastolicki_krvni_tlak', 
                             'glukoza_u_krvi', 'tjelesna_temp', 'BMI', 'otkucaji_srca'];
     
@@ -606,6 +614,7 @@ async function submitAssessment() {
         console.error('Nedostaju polja:', missing);
         alert(`Molimo popunite sva polja: ${missing.join(', ')}`);
         showLoading(false);
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
         return;
     }
     
@@ -620,19 +629,13 @@ async function submitAssessment() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(payload),
-            timeout: 30000
+            body: JSON.stringify(payload)
         });
         
         console.log('Response primljen, status:', response.status);
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API vratila grešku:', {
-                status: response.status,
-                statusText: response.statusText,
-                body: errorText
-            });
             throw new Error(`API greška ${response.status}: ${errorText.substring(0, 200)}`);
         }
         
@@ -642,40 +645,65 @@ async function submitAssessment() {
         const risk = result.risk;
         const ragRecommendations = result.rag_recommendations || 'Nema dodatnih preporuka.';
         
-        form.style.display = 'none';
+        if (!risk || typeof risk !== 'object') {
+            throw new Error('Neispravan odgovor servera: nedostaje objekat rizika');
+        }
+        
+        // 3. KLJUČNI DIO: Sigurna navigacija na rezultate
+        // Sakrivamo SVE što bi moglo smetati
+        heroSection.style.display = 'none';
+        stalSection.style.display = 'none'; // Osiguranje ako je korisnik došao sa "Kako radi"
+        
+        // Prikazujemo glavni kontejner i sekciju rezultata
+        appMain.style.display = 'block';
+        form.style.display = 'none'; // Sakrij formu unutar appMain
         resultsSection.style.display = 'block';
         
-        await displayResults(risk, ragRecommendations, payload);
+        try {
+            await displayResults(risk, ragRecommendations, payload);
+        } catch (displayErr) {
+            console.error('Greška pri prikazu rezultata:', displayErr);
+            const errDiv = document.createElement('div');
+            errDiv.id = 'api-error-banner';
+            errDiv.className = 'error-banner'; // Koristi klasu za stil ako postoji
+            errDiv.style = 'background:#fff0f3;color:#c62828;padding:1rem;border-radius:12px;margin-top:1rem;text-align:center;border:1px solid #ffccd5;';
+            errDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Greška pri renderovanju grafikona. Rezultati su primljeni ali se ne mogu prikazati vizuelno.`;
+            resultsSection.prepend(errDiv);
+        }
+        
+        // Skroluj na vrh da korisnik vidi nivo rizika
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-   } catch (err) {
-    console.error('❌ Greška:', err);
-    
-    // Prikaži grešku direktno u UI-u, ne samo alert
-    let errorMsg = err.message.includes('fetch')
-        ? 'Server nije dostupan. Pokrenite backend: python app.py'
-        : err.message;
-    
-    // Ostavi formu vidljivom i prikaži grešku
-    form.style.display = 'block';
-    resultsSection.style.display = 'none';
-    
-    // Opciono: prikaži inline poruku
-    const existingErr = document.getElementById('api-error-banner');
-    if (existingErr) existingErr.remove();
-    const errDiv = document.createElement('div');
-    errDiv.id = 'api-error-banner';
-    errDiv.style = 'background:#fff0f3;color:#c62828;padding:1rem;border-radius:12px;margin-top:1rem;text-align:center;';
-    errDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg}`;
-    form.after(errDiv);
-    
-} finally {
-    showLoading(false);
-}
+    } catch (err) {
+        console.error('❌ Greška:', err);
+        
+        let errorMsg = err.message.includes('fetch') || err.message.includes('Failed to fetch')
+            ? 'Server nije dostupan. Proverite da li je Python backend pokrenut.'
+            : err.message;
+        
+        // U slučaju greške, vrati korisnika na formu da može probati opet
+        heroSection.style.display = 'none';
+        appMain.style.display = 'block';
+        form.style.display = 'block';
+        resultsSection.style.display = 'none';
+        
+        const errDiv = document.createElement('div');
+        errDiv.id = 'api-error-banner';
+        errDiv.style = 'background:#fff0f3;color:#c62828;padding:1rem;border-radius:12px;margin-top:1rem;text-align:center;border:1px solid #ffccd5;';
+        errDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg}`;
+        form.after(errDiv);
+        
+    } finally {
+        // Obavezno sakrij loading bez obzira na ishod
+        showLoading(false);
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }
 }
 
 // Reset forme i povratak na formu
 function resetAndShowForm() {
+    heroSection.style.display = 'none';
+    appMain.style.display = 'block';
     form.reset();
     const errorSpans = document.querySelectorAll('.error-message');
     errorSpans.forEach(span => span.innerText = '');
@@ -712,47 +740,47 @@ async function loadFeatureImportance() {
 // Opisi za svaku fazu
 const cycleDescriptions = {
     sense: {
-        title: "🔍 SENSE - Prikupljanje podataka",
+        title: "SENSE - Prikupljanje podataka",
         icon: "fa-database",
         description: "Sistem prikuplja zdravstvene podatke trudnice kroz formu: dob, krvni pritisak, nivo glukoze, BMI (izračunat iz visine i težine), otkucaje srca, temperaturu, te medicinsku historiju. Ovi podaci se validiraju i pripremaju za analizu.",
         details: [
-            "✓ 11 ključnih zdravstvenih parametara",
-            "✓ Automatska validacija unosa (15-60 godina, 50-150 bpm, itd.)",
-            "✓ BMI se automatski izračunava iz visine i težine",
-            "✓ Podaci se šalju Random Forest modelu na analizu"
+            "11 ključnih zdravstvenih parametara",
+            "Automatska validacija unosa (15-60 godina, 50-150 bpm, itd.)",
+            "BMI se automatski izračunava iz visine i težine",
+            "Podaci se šalju Random Forest modelu na analizu"
         ]
     },
     think: {
-        title: "🧠 THINK - Analiza i predikcija",
+        title: "HINK - Analiza i predikcija",
         icon: "fa-brain",
         description: "Random Forest model (100 stabala, max depth 10) analizira prikupljene podatke i predviđa nivo rizika. Model je treniran na 1140 primjera sa 11 karakteristika, sa tačnošću od 97.8%.",
         details: [
-            "✓ Random Forest klasifikator sa 100 stabala",
-            "✓ 97.8% tačnost na testnom skupu",
-            "✓ Top 3 faktora: Dijabetes (22.6%), Glukoza (21.6%), Otkucaji srca (14.6%)",
-            "✓ RAG sistem pretražuje klinički vodič (1105 fragmenata)"
+            "Random Forest klasifikator sa 100 stabala",
+            "97.8% tačnost na testnom skupu",
+            "Top 3 faktora: Dijabetes (22.6%), Glukoza (21.6%), Otkucaji srca (14.6%)",
+            "RAG sistem pretražuje klinički vodič (1105 fragmenata)"
         ]
     },
     act: {
-        title: "🎯 ACT - Akcija i preporuke",
+        title: "ACT - Akcija i preporuke",
         icon: "fa-bullhorn",
         description: "Na osnovu predikcije, sistem generiše personalizovane preporuke. Za visok rizik prikazuju se hitne intervencije, za nizak rizik standardne preporuke iz kliničkog vodiča.",
         details: [
-            "✓ Vizuelni prikaz nivoa rizika (crveni/zeleni indikator)",
-            "✓ Preporuke iz kliničkog vodiča za antenatalnu zaštitu",
-            "✓ Semantička pretraga pronalazi relevantne dijelove dokumenta",
-            "✓ Prikazuje relevantnost pronađenih informacija (80%+)"
+            "Vizuelni prikaz nivoa rizika (crveni/zeleni indikator)",
+            "Preporuke iz kliničkog vodiča za antenatalnu zaštitu",
+            "Semantička pretraga pronalazi relevantne dijelove dokumenta",
+            "Prikazuje relevantnost pronađenih informacija (80%+)"
         ]
     },
     learn: {
-        title: "📚 LEARN - Kontinuirano učenje",
+        title: "LEARN - Kontinuirano učenje",
         icon: "fa-graduation-cap",
         description: "Sistem uči iz svake interakcije. Korisnici daju povratnu informaciju o tačnosti predikcije, što se čuva u bazi. Nakon 10 novih primjera, model se automatski poboljšava (retraining).",
         details: [
-            "✓ Feedback sistem prikuplja povratne informacije",
-            "✓ Podaci se čuvaju u zasebnom fajlu za retraining",
-            "✓ Retraining nakon 10 novih primjera",
-            "✓ Model se kontinuirano poboljšava kroz vrijeme"
+            "Feedback sistem prikuplja povratne informacije",
+            "Podaci se čuvaju u zasebnom fajlu za retraining",
+            "Retraining nakon 10 novih primjera",
+            "Model se kontinuirano poboljšava kroz vrijeme"
         ]
     }
 };
@@ -879,14 +907,6 @@ toggleRagBtn.addEventListener('click', () => {
     }
 });
 
-// Submit forme
-form.addEventListener('submit', function(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('Forma poslata, validacija...');
-    submitAssessment();
-});
-
 // Reset dugme na formi
 form.addEventListener('reset', function() {
     setTimeout(() => {
@@ -900,7 +920,7 @@ document.getElementById('feedback-yes')?.addEventListener('click', function(even
     event.preventDefault();
     event.stopPropagation();
     console.log('Feedback YES kliknut');
-    sendFeedback(true);
+    event.stopPropagation(); sendFeedback(true);
 });
 
 document.getElementById('feedback-no')?.addEventListener('click', function(event) {
@@ -913,13 +933,7 @@ document.getElementById('feedback-no')?.addEventListener('click', function(event
 });
 
 // Prikaz STAL stranice (Kako Gestatix radi?)
-howItWorksBtn?.addEventListener('click', () => {
-    heroSection.style.display = 'none';
-    stalSection.style.display = 'block';
-    appMain.style.display = 'none';
-    initStalCycle();
-    loadStalStats();
-});
+
 
 // Inicijalizacija
 form.style.display = 'block';
@@ -928,3 +942,59 @@ setupNumericInputValidation();
 loadFeedbackStats();
 
 console.log('App inicijalizovan!');
+
+// Centralizovana inicijalizacija
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Provjera API statusa samo jednom
+    checkAPIStatus();
+    setupNumericInputValidation();
+    loadFeedbackStats();
+
+    // 2. Jedinstven listener za formu
+    const riskForm = document.getElementById('risk-form');
+    if (riskForm) {
+        // Uklanjamo sve stare listenere (ako postoje) i dodajemo jedan čisti
+        riskForm.onsubmit = null; 
+        riskForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            e.stopPropagation();
+            console.log('Forma pokrenuta...');
+            submitAssessment();
+        });
+    }
+
+    // 3. Navigacija - Započni putovanje
+    startBtn?.addEventListener('click', () => {
+        heroSection.style.display = 'none';
+        appMain.style.display = 'block';
+        window.scrollTo(0, 0);
+    });
+
+    // 4. Navigacija - Kako radi (STAL)
+    const handleNavigation = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        heroSection.style.display = 'none';
+        appMain.style.display = 'none';
+        stalSection.style.display = 'block';
+        if (typeof initStalCycle === 'function') initStalCycle();
+    };
+
+    if (howItWorksBtn) {
+        howItWorksBtn.onclick = handleNavigation;
+    }
+    
+    // Nazad dugmad
+    backBtn?.addEventListener('click', () => {
+        appMain.style.display = 'none';
+        heroSection.style.display = 'block';
+    });
+
+    backToHeroFromStal?.addEventListener('click', () => {
+        stalSection.style.display = 'none';
+        heroSection.style.display = 'block';
+    });
+});
+

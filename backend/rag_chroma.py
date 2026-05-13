@@ -218,7 +218,7 @@ def build_vector_store_from_pdf(pdf_path: str, force_rebuild: bool = False):
         )
         print(f"  Dodano {len(batch_ids)} fragmenata...")
     
-    print(f"\n✅ Uspješno indeksirano {len(documents)} fragmenata.")
+    print(f"\nUspješno indeksirano {len(documents)} fragmenata.")
 
 
 def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict[str, Any]]:
@@ -261,25 +261,19 @@ def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict
 
 
 def get_guide_header(risk_level: str = "Low") -> str:
-    """
-    Generiše uvodnu rečenicu o vodiču.
-    """
-    guide_text = f"""📚 PREMA {GUIDE_INFO['title']} (izdanje {GUIDE_INFO['year']}.):
-
-    """
+    
+    guide_text = ""
     
     # ISPRAVKA: Provjeri da li je risk_level string ili nešto drugo
     if "High" in str(risk_level) or "VISOK" in str(risk_level).upper():
-        guide_text += "🔴 **VISOK RIZIK** - Preporuke za hitnu intervenciju:\n\n"
+        guide_text += "VISOK RIZIK - Preporuke za hitnu intervenciju:\n\n"
     else:
-        guide_text += "🟢 **STANDARDNA NJEGA** - Opšte preporuke za zdravu trudnoću:\n\n"
+        guide_text += "STANDARDNA NJEGA - Opšte preporuke za zdravu trudnoću:\n\n"
     
     return guide_text
 
 def get_relevant_advice_rag(query_context: str, patient_data: dict, n_results: int = 3) -> str:
-    """
-    POBOLJŠANO: Vraća relevantne savjete sa uvodnom rečenicom.
-    """
+    
     query = build_semantic_query_bhs(patient_data, query_context)
     
     # Povećan broj rezultata za bolju selekciju

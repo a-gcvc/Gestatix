@@ -22,12 +22,12 @@
             <p class="hero-subtitle">Tvoj asistent u bezbrižnoj trudnoći</p>
             <p class="hero-description">Unesi svoje zdravstvene podatke, a mi ćemo ti pružiti procjenu rizika i personalizovane preporuke na osnovu kliničkog vodiča.</p>
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button id="start-journey-btn" class="btn-start">
+                <button type="button" id="start-journey-btn" class="btn-start">
                     <i class="fas fa-feather-alt"></i>
                     Započni svoje putovanje
                     <i class="fas fa-arrow-right"></i>
                 </button>
-                <button id="how-it-works-btn" class="btn-how" style="background: transparent; border: 2px solid #e91e63; color: #e91e63; padding: 14px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">
+                <button type="button" id="how-it-works-btn" class="btn-how" style="background: transparent; border: 2px solid #e91e63; color: #e91e63; padding: 14px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">
                     <i class="fas fa-question-circle"></i>
                     Kako Gestatix radi?
                 </button>
@@ -45,7 +45,7 @@
     <section id="stal-section" style="display: none; min-height: 100vh; padding: 4rem 2rem; background: linear-gradient(135deg, #fff5f8, #ffe4ed);">
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                <button id="back-to-hero-from-stal" class="btn-back">
+                <button type="button" id="back-to-hero-from-stal" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Nazad na početnu
                 </button>
                 <h2 style="color: #ad1457;"><i class="fas fa-sync-alt"></i> Kako Gestatix radi?</h2>
@@ -93,7 +93,7 @@
         <div class="container">
             <!-- Header forme -->
             <div class="form-header">
-                <button id="back-to-home" class="btn-back">
+                <button type="button" id="back-to-home" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Početna
                 </button>
                 <h2><i class="fas fa-notes-medical"></i> Procjena zdravstvenog rizika</h2>
@@ -101,7 +101,7 @@
             </div>
 
             <!-- Forma -->
-            <form id="risk-form" onsubmit="return false;">
+            <form id="risk-form">
                 <div class="form-grid">
                     <!-- Lični podaci -->
                     <div class="form-section">
@@ -159,7 +159,7 @@
                     <div class="form-section">
                         <h3><i class="fas fa-notes-medical"></i> Medicinska historija</h3>
                         <div class="input-group">
-                            <label for="complications">Komplikacije u prošlim trudnoćama</label>
+                            <label for="complications">Ukoliko ste ranije imali trudnoću, da li je bilo zabilježenih komplikacija?</label>
                             <select id="complications" name="complications" required>
                                 <option value="" disabled selected>-- Odaberite --</option>
                                 <option value="0">Ne</option>
@@ -168,7 +168,7 @@
                             <span class="error-message" id="complications-error"></span>
                         </div>
                         <div class="input-group">
-                            <label for="diabetes">Dijabetes (postojeći)</label>
+                            <label for="diabetes">Da li je prije trudnoće dijagnosticiran dijabetes?</label>
                             <select id="diabetes" name="diabetes" required>
                                 <option value="" disabled selected>-- Odaberite --</option>
                                 <option value="0">Ne</option>
@@ -177,7 +177,7 @@
                             <span class="error-message" id="diabetes-error"></span>
                         </div>
                         <div class="input-group">
-                            <label for="gdm">Gestacijski dijabetes</label>
+                            <label for="gdm">Da li je tokom trudnoće dijagnosticiran dijabetes? (gestacijski dijabetes)</label>
                             <select id="gdm" name="gdm" required>
                                 <option value="" disabled selected>-- Odaberite --</option>
                                 <option value="0">Ne</option>
@@ -186,7 +186,7 @@
                             <span class="error-message" id="gdm-error"></span>
                         </div>
                         <div class="input-group">
-                            <label for="mental">Mentalno zdravlje (depresija/anksioznost)</label>
+                            <label for="mental">Da li imate problema s mentalnim zdravljem? (depresija/anksioznost)</label>
                             <select id="mental" name="mental" required>
                                 <option value="" disabled selected>-- Odaberite --</option>
                                 <option value="0">Ne</option>
@@ -196,7 +196,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <!-- Dugmad za akciju -->
                 <div class="form-actions">
                     <button type="reset" class="btn-reset"><i class="fas fa-eraser"></i> Resetuj formu</button>
@@ -208,7 +208,7 @@
             <div id="results-section" style="display: none;">
                 <div class="results-header">
                     <h2><i class="fas fa-chart-simple"></i> Rezultati procjene</h2>
-                    <button id="new-assessment" class="btn-new"><i class="fas fa-plus-circle"></i> Nova procjena</button>
+                    <button type="button" id="new-assessment" class="btn-new"><i class="fas fa-plus-circle"></i> Nova procjena</button>
                 </div>
 
                 <!-- Risk indikator -->
@@ -259,7 +259,7 @@
 
                 <!-- Dodatne informacije: RAG preporuke -->
                 <div class="rag-section">
-                    <button id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
+                    <button type="button" id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
                     <div id="rag-content" style="display: none;">
                         <div class="rag-header">
                             <i class="fas fa-graduation-cap"></i> Prema Kliničkom vodiču za antenatalnu zaštitu (2021.)
