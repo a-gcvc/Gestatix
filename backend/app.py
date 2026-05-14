@@ -51,7 +51,7 @@ def predict():
     try:
         data = request.get_json()
         
-        # Validacija osnovnih polja
+        # Validacija osnovnih polja - validation of essential fields
         required_fields = ['dob', 'sistolicki_krvni_tlak', 'dijastolicki_krvni_tlak',
                            'glukoza_u_krvi', 'tjelesna_temp', 'BMI', 'otkucaji_srca']
         
@@ -61,10 +61,10 @@ def predict():
                 'error': f'Nedostaju polja: {missing}'
             }), 400
         
-        # Predikcija rizika koristeci Random Forest
+        # Predikcija rizika koristeci Random Forest - Risk prediction using Random Forest model
         prediction_result = predict_risk(data)
         
-        # Odgovor bez RAG (samo predikcija)
+        # Odgovor bez RAG (samo predikcija) - Response without RAG (just prediction)
         response = {
             'risk': prediction_result,
             'input_data': data,
@@ -132,10 +132,10 @@ def predict_with_rag():
     try:
         data = request.get_json()
         
-        # 1. Predikcija rizika (Random Forest)
+        # 1. Predikcija rizika (Random Forest) - Risk prediction using Random Forest model
         prediction_result = predict_risk(data)
         
-        # 2. RAG preporuke iz vektorske baze
+        # 2. RAG preporuke iz vektorske baze - RAG recommendations from vector database
         advice_text = get_relevant_advice_rag(
             query_context=f"Trudnoća sa nivoom rizika {prediction_result['risk_level']}",
             patient_data=data,
@@ -169,10 +169,10 @@ def submit_feedback():
         if not input_data or not original_risk:
             return jsonify({'error': 'Nedostaju potrebni podaci'}), 400
         
-        # Dodaj feedback
+        # Dodaj feedback - Add feedback
         result = feedback_manager.add_feedback(input_data, original_risk, user_agrees)
         
-        # Ako se korisnik ne slaže, potrebno je unijeti tačan rizik
+        # Ako se korisnik ne slaže, potrebno je unijeti tačan rizik - If user disagrees, they should provide the correct risk
         if not user_agrees:
             correct_risk = data.get('correct_risk')
             if correct_risk:
@@ -220,7 +220,7 @@ def get_feature_importance():
         
         feature_importance = model.feature_importances_
         
-        # Sortiraj po važnosti (opadajuće)
+        # Sortiraj po važnosti (opadajuće) - Sort by importance (descending)
         sorted_indices = np.argsort(feature_importance)[::-1]
         
         result = {
@@ -232,7 +232,7 @@ def get_feature_importance():
         return jsonify(result), 200
     except Exception as e:
         print(f"Greška pri učitavanju feature importance: {e}")
-        # Fallback vrijednosti ako model nije dostupan
+        # Fallback vrijednosti ako model nije dostupan - Fallback values if model is not available
         return jsonify({
             'labels': ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
             'values': [0.2262, 0.2159, 0.1464, 0.1438, 0.0959],
@@ -248,10 +248,10 @@ def predict_with_feedback():
     try:
         data = request.get_json()
         
-        # 1. Predikcija rizika
+        # 1. Predikcija rizika - Risk prediction using Random Forest model
         prediction_result = predict_risk(data)
         
-        # 2. RAG preporuke
+        # 2. RAG preporuke - RAG recommendations from vector database
         advice_text = get_relevant_advice_rag(
             query_context=f"Trudnoća sa nivoom rizika {prediction_result['risk_level']}",
             patient_data=data,
@@ -265,7 +265,7 @@ def predict_with_feedback():
             'model_used': 'RandomForestClassifier'
         }
         
-        # 3. Ako je feedback zahtijevan, dodaj feedback ID
+        # 3. Ako je feedback zahtijevan, dodaj feedback ID - If feedback is requested, add feedback ID
         if data.get('request_feedback', False):
             response['feedback_id'] = datetime.now().timestamp()
             response['feedback_prompt'] = {

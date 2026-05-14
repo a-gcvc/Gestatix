@@ -14,7 +14,7 @@ import os
 
 
 def load_and_prepare_data(csv_path='data/dataset.csv'):
-    """Učitava CSV, čisti podatke i priprema za trening."""
+    """Učitava CSV, čisti podatke i priprema za trening. - Load CSV, clean data, and prepare for training."""
     
     df = pd.read_csv(csv_path)
     
@@ -71,14 +71,14 @@ def load_and_prepare_data(csv_path='data/dataset.csv'):
 
 
 def encode_target(y):
-    """Enkodira target varijablu (Low/High -> 0/1)."""
+    """Enkodira target varijablu (Low/High -> 0/1). - Encode target variable (Low/High -> 0/1)."""
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
     return y_encoded, le
 
 
 def train_model():
-    """Glavna funkcija za trening i cuvanje modela."""
+    """Glavna funkcija za trening i cuvanje modela. - Main function to train and save the model."""
     
     # Ucitavanje podataka - Load and prepare data
     df = load_and_prepare_data()

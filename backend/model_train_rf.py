@@ -14,7 +14,7 @@ import os
 
 
 def load_and_prepare_data(csv_path='data/dataset.csv'):
-    """Učitava CSV, čisti podatke i priprema za trening."""
+    """Učitava CSV, čisti podatke i priprema za trening. - Load CSV, clean data, and prepare for training."""
     
     df = pd.read_csv(csv_path)
     
@@ -78,14 +78,14 @@ def load_and_prepare_data(csv_path='data/dataset.csv'):
 
 
 def encode_target(y):
-    """Enkodira target varijablu (Low/High -> 0/1)."""
+    """Enkodira target varijablu (Low/High -> 0/1). - Encode target variable (Low/High -> 0/1)."""
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
     return y_encoded, le
 
 
 def train_model():
-    """Glavna funkcija za trening i cuvanje Random Forest modela."""
+    """Glavna funkcija za trening i cuvanje Random Forest modela. - Main function for training and saving the Random Forest model."""
     
     print("\n" + "="*60)
     print("  RANDOM FOREST - TRENING MODELA")
@@ -100,7 +100,7 @@ def train_model():
                     'komplikacije_u_proslosti', 'dijabetes', 
                     'gestacijski_dijabetes', 'mentalno_zdravlje', 'otkucaji_srca']
     
-    print(f"\n📋 Feature-ovi ({len(feature_cols)}):")
+    print(f"\nFeature-ovi ({len(feature_cols)}):")
     for i, col in enumerate(feature_cols, 1):
         print(f"   {i}. {col}")
     
@@ -109,7 +109,7 @@ def train_model():
     
     # Enkodiranje targeta - Encode target
     y_encoded, label_encoder = encode_target(y)
-    print(f"\n🎯 Target mapping: Low -> 0, High -> 1")
+    print(f"\nTarget mapping: Low -> 0, High -> 1")
     
     # Podjela na train/test (80/20) - koristi random_state=0 kao u notebooku
     # Split into train/test (80/20) - use random_state=0 as in notebook
@@ -117,7 +117,7 @@ def train_model():
         X, y_encoded, test_size=0.2, random_state=0, stratify=y_encoded
     )
     
-    print(f"\n📊 Podjela podataka:")
+    print(f"\nPodjela podataka:")
     print(f"   Training set: {X_train.shape[0]} rows ({X_train.shape[0]/len(X)*100:.1f}%)")
     print(f"   Test set: {X_test.shape[0]} rows ({X_test.shape[0]/len(X)*100:.1f}%)")
     print(f"\n   Training - Low (0): {sum(y_train == 0)}")
@@ -126,7 +126,7 @@ def train_model():
     print(f"   Test - High (1): {sum(y_test == 1)}")
     
     # Treniranje Random Forest modela - Train Random Forest model
-    print("\n🧠 Treniranje Random Forest modela...")
+    print("\nTreniranje Random Forest modela...")
     
     model = RandomForestClassifier(
         n_estimators=100,       # broj stabala (100 je dobar balans)
@@ -155,22 +155,22 @@ def train_model():
     print(f"\n{'='*60}")
     print("  REZULTATI EVALUACIJE")
     print('='*60)
-    print(f"\n✅ Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
-    print(f"✅ AUC-ROC: {auc:.4f}")
+    print(f"\nAccuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
+    print(f"AUC-ROC: {auc:.4f}")
     
-    print(f"\n📊 Confusion Matrix:")
+    print(f"\nConfusion Matrix:")
     print(f"                 Predicted")
     print(f"               Low      High")
     print(f"   Actual Low    {tn:3d}       {fp:3d}")
     print(f"   Actual High   {fn:3d}       {tp:3d}")
     
-    print(f"\n🔢 Detalji:")
+    print(f"\nDetalji:")
     print(f"   True Negatives (Low correctly predicted):   {tn}")
     print(f"   False Positives (Low predicted as High):    {fp}")
     print(f"   False Negatives (High predicted as Low):    {fn}")
     print(f"   True Positives (High correctly predicted):  {tp}")
     
-    print(f"\n📋 Classification Report:")
+    print(f"\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=['Low', 'High']))
     
     # Feature importance - Važnost feature-ova
@@ -202,7 +202,7 @@ def train_model():
             'feedback_risk', 'original_prediction', 'user_confirmation', 'timestamp', 'trained'
         ])
         feedback_df.to_csv(feedback_csv_path, index=False)
-        print(f"\n✅ Kreiran feedback fajl: {feedback_csv_path}")
+        print(f"\nKreiran feedback fajl: {feedback_csv_path}")
 
     # Sačuvaj verziju modela
     with open('models/model_version.txt', 'w') as f:

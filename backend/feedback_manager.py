@@ -17,30 +17,30 @@ class FeedbackManager:
                  feature_cols_path='models/feature_cols_rf.pkl',
                  retrain_threshold=10):
         """
-        Inicijalizacija Feedback Manager-a.
+        Inicijalizacija Feedback Manager-a. - Initializes the Feedback Manager. Loads existing feedback data, model, and feature columns. Sets the retrain threshold for when to trigger model retraining based on new feedback samples.
         """
         self.feedback_file = feedback_file
         self.model_path = model_path
         self.feature_cols_path = feature_cols_path
         self.retrain_threshold = retrain_threshold
         
-        # Učitaj feature kolone
+        # Učitaj feature kolone - load the list of feature columns used for training the model
         self.feature_cols = joblib.load(feature_cols_path)
         
-        # Učitaj postojeće feedback podatke
+        # Učitaj postojeće feedback podatke - load existing feedback data from CSV
         self.feedback_data = self._load_feedback_data()
         
-        # Broj novih primjera od zadnjeg treninga
+        # Broj novih primjera od zadnjeg treninga - count how many new samples have been added since the last training
         self.new_samples_count = self._count_new_samples()
     
     def _create_empty_feedback_df(self):
-        """Kreira prazan DataFrame za feedback podatke."""
+        """Kreira prazan DataFrame za feedback podatke. - creates an empty DataFrame for feedback data with the appropriate columns."""
         columns = self.feature_cols + ['feedback_risk', 'original_prediction', 
                                        'user_confirmation', 'timestamp', 'trained']
         return pd.DataFrame(columns=columns)
     
     def _load_feedback_data(self):
-        """Učitava feedback podatke iz CSV fajla."""
+        """Učitava feedback podatke iz CSV fajla. - loads feedback data from a CSV file. If the file doesn't exist or is empty, it creates a new DataFrame with the appropriate columns."""
         if os.path.exists(self.feedback_file) and os.path.getsize(self.feedback_file) > 0:
             try:
                 df = pd.read_csv(self.feedback_file)
@@ -50,18 +50,18 @@ class FeedbackManager:
                         df[col] = pd.to_numeric(df[col], errors='coerce')
                 return df
             except pd.errors.EmptyDataError:
-                print(f"⚠️ Fajl {self.feedback_file} je prazan. Kreiram novi.")
+                print(f"Fajl {self.feedback_file} je prazan. Kreiram novi.")
                 return self._create_empty_feedback_df()
         else:
-            # Kreiraj novi fajl
+            # Kreiraj novi fajl - create a new file if it doesn't exist
             return self._create_empty_feedback_df()
     
     def _save_feedback_data(self):
-        """Čuva feedback podatke u CSV."""
+        """Čuva feedback podatke u CSV. - saves the feedback data to CSV."""
         self.feedback_data.to_csv(self.feedback_file, index=False)
     
     def _count_new_samples(self):
-        """Broji koliko novih primjera ima od zadnjeg treninga."""
+        """Broji koliko novih primjera ima od zadnjeg treninga. - counts how many new samples have been added since the last training."""
         if len(self.feedback_data) == 0:
             return 0
         
@@ -73,9 +73,9 @@ class FeedbackManager:
     
     def add_feedback(self, input_data, original_prediction, user_agrees):
         """
-        Dodaje feedback korisnika u bazu.
+        Dodaje feedback korisnika u bazu. - Adds user feedback to the database. This should be called after the user provides feedback on a prediction. The 'input_data' should contain the feature values for the case, 'original_prediction' is what the model predicted, and 'user_agrees' is a boolean indicating whether the user agrees with the model's prediction or not.
         """
-        # Kreiraj novi red
+        # Kreiraj novi red - create a new row for the feedback data
         new_row = {}
         for col in self.feature_cols:
             new_row[col] = input_data.get(col, np.nan)
@@ -87,20 +87,20 @@ class FeedbackManager:
         new_row['trained'] = False
         
         if user_agrees:
-            # Korisnik se slaže - koristi originalnu predikciju
+            # Korisnik se slaže - koristi originalnu predikciju - if the user agrees, use the original prediction as feedback risk
             new_row['feedback_risk'] = 1 if original_prediction == 'High' else 0
         else:
-            # Korisnik se ne slaže - treba postaviti naknadno
+            # Korisnik se ne slaže - treba postaviti naknadno - if the user disagrees, we will set feedback_risk to None for now and update it later when the correct risk is provided
             new_row['feedback_risk'] = None
         
-        # Dodaj u DataFrame
+        # Dodaj u DataFrame - add the new row to the feedback DataFrame
         self.feedback_data = pd.concat([self.feedback_data, pd.DataFrame([new_row])], 
                                         ignore_index=True)
         
-        # Sačuvaj u CSV
+        # Sačuvaj u CSV - save the updated feedback data to CSV
         self._save_feedback_data()
         
-        # Provjeri da li treba retrain-ati model
+        # Provjeri da li treba retrain-ati model - check if we need to retrain the model based on the new samples count
         self.new_samples_count = self._count_new_samples()
         
         result = {
@@ -115,9 +115,9 @@ class FeedbackManager:
     
     def update_feedback_risk(self, input_data, correct_risk):
         """
-        Ažurira feedback sa tačnim rizikom (kada se korisnik ne slaže).
+        Ažurira feedback sa tačnim rizikom (kada se korisnik ne slaže). - Updates the feedback with the correct risk (when the user disagrees). This should be called after the user provides the correct risk level for a case they disagreed with.
         """
-        # Pronađi zadnji unos sa istim podacima i bez feedback_risk
+        # Pronađi zadnji unos sa istim podacima i bez feedback_risk -  find the last entry with the same input data and no feedback risk set
         mask = (self.feedback_data['user_confirmation'] == False) & \
                (self.feedback_data['feedback_risk'].isna())
         
@@ -128,7 +128,7 @@ class FeedbackManager:
     
     def retrain_model(self, force=False):
         """
-        Ponovo trenira model koristeći originalne podatke + feedback podatke.
+        Ponovo trenira model koristeći originalne podatke + feedback podatke. - Retrains the model using original data + feedback data. If 'force' is True, it will retrain regardless of the number of new samples.
         """
         if not force and self.new_samples_count < self.retrain_threshold:
             return {
@@ -136,11 +136,11 @@ class FeedbackManager:
                 'message': f'Nedovoljno novih primjera. Trenutno: {self.new_samples_count}/{self.retrain_threshold}'
             }
         
-        # Pripremi podatke za trening
+        # Pripremi podatke za trening - prepare the data for training
         X_list = []
         y_list = []
         
-        # 1. Učitaj originalne podatke
+        # 1. Učitaj originalne podatke - load the original training data
         try:
             from model_train_rf import load_and_prepare_data
             df_original = load_and_prepare_data('data/dataset.csv')
@@ -155,17 +155,17 @@ class FeedbackManager:
             
             X_list.append(X_original)
             y_list.append(y_original)
-            print(f"✅ Učitano {len(X_original)} originalnih primjera")
+            print(f"Učitano {len(X_original)} originalnih primjera")
         except Exception as e:
-            print(f"⚠️ Greška pri učitavanju originalnih podataka: {e}")
+            print(f"Greška pri učitavanju originalnih podataka: {e}")
         
-        # 2. Dodaj feedback primjere koji imaju validan feedback_risk
+        # 2. Dodaj feedback primjere koji imaju validan feedback_risk - add feedback examples that have a valid feedback risk
         feedback_valid = self.feedback_data[self.feedback_data['feedback_risk'].notna()].copy()
         if len(feedback_valid) > 0:
             X_feedback = feedback_valid[self.feature_cols]
             y_feedback = feedback_valid['feedback_risk']
             
-            # Očisti NaN vrijednosti
+            # Očisti NaN vrijednosti - clean NaN values from the feedback data
             valid_idx = X_feedback.notna().all(axis=1)
             X_feedback = X_feedback[valid_idx]
             y_feedback = y_feedback[valid_idx]
@@ -175,17 +175,17 @@ class FeedbackManager:
                 y_list.append(y_feedback)
                 print(f"✅ Učitano {len(X_feedback)} feedback primjera")
         
-        # Kombinuj sve podatke
+        # Kombinuj sve podatke - combine all the data for training
         if not X_list:
             return {'success': False, 'message': 'Nema podataka za trening'}
         
         X_combined = pd.concat(X_list, ignore_index=True)
         y_combined = pd.concat(y_list, ignore_index=True)
         
-        print(f"\n📊 Ukupno podataka za trening: {len(X_combined)}")
+        print(f"\nUkupno podataka za trening: {len(X_combined)}")
         
-        # Treniraj novi model
-        print("🧠 Treniranje novog Random Forest modela...")
+        # Treniraj novi model - train a new model using the combined data
+        print("Treniranje novog Random Forest modela...")
         
         new_model = RandomForestClassifier(
             n_estimators=100,
@@ -200,21 +200,21 @@ class FeedbackManager:
         
         new_model.fit(X_combined, y_combined)
         
-        # Evaluacija
+        # Evaluacija - evaluate the new model on the combined training data to check accuracy before saving
         from sklearn.metrics import accuracy_score
         y_pred = new_model.predict(X_combined)
         accuracy = accuracy_score(y_combined, y_pred)
         
-        print(f"📈 Accuracy na trening skupu: {accuracy:.4f}")
+        print(f"Accuracy na trening skupu: {accuracy:.4f}")
         
-        # Sačuvaj novi model
+        # Sačuvaj novi model - save the new model to disk
         joblib.dump(new_model, self.model_path)
         
-        # Označi sve feedback primjere kao trained
+        # Označi sve feedback primjere kao trained - mark all feedback examples as trained
         self.feedback_data['trained'] = True
         self._save_feedback_data()
         
-        # Resetuj brojač novih primjera
+        # Resetuj brojač novih primjera - reset the new samples count after retraining
         self.new_samples_count = self._count_new_samples()
         
         return {
@@ -226,7 +226,7 @@ class FeedbackManager:
         }
     
     def get_stats(self):
-        """Vraća statistike o feedback sistemu."""
+        """Vraća statistike o feedback sistemu. - Returns statistics about the feedback system, including total feedback count, how many agreed/disagreed with the model, how many are pending correction, and how many have been used for training."""
         total_feedback = len(self.feedback_data)
         
         if total_feedback == 0:
@@ -258,7 +258,7 @@ class FeedbackManager:
         }
 
 def _save_model_version(self, version_info=None):
-    """Čuva informacije o verziji modela."""
+    """Čuva informacije o verziji modela. - saves model version information to a text file. - This should be called after retraining the model to keep track of the version and training details."""
     version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
     
     if version_info is None:
@@ -275,10 +275,10 @@ def _save_model_version(self, version_info=None):
         f.write(f"Total Samples: {version_info['total_samples']}\n")
         f.write(f"Feedback Samples: {version_info['feedback_samples']}\n")
     
-    print(f"✅ Verzija modela sačuvana: {version_info['version']}")
+    print(f"Verzija modela sačuvana: {version_info['version']}")
 
 def _get_next_version(self):
-    """Dohvata sljedeći broj verzije."""
+    """Dohvata sljedeći broj verzije. - retrieves the next version number based on the existing version information. This is a simple implementation that increments the version number. In a real-world scenario, you might want to use a more robust versioning system."""
     version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
     
     if os.path.exists(version_file):
@@ -302,7 +302,7 @@ def _get_next_version(self):
         return "1.0"
 
 def _load_model_version(self):
-    """Učitava informacije o verziji modela."""
+    """Učitava informacije o verziji modela. - loads model version information from a text file."""
     version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
     
     if os.path.exists(version_file):
@@ -315,7 +315,7 @@ def _load_model_version(self):
 _feedback_manager = None
 
 def get_feedback_manager():
-    """Dohvata ili kreira globalnu instancu FeedbackManager-a."""
+    """Dohvata ili kreira globalnu instancu FeedbackManager-a. - Retrieves or creates a global instance of the FeedbackManager. This ensures that we have a single instance managing the feedback data and model retraining across the application."""
     global _feedback_manager
     if _feedback_manager is None:
         _feedback_manager = FeedbackManager()

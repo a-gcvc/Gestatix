@@ -1,7 +1,7 @@
 """
 build_vector_store.py
 Izgradnja vektorske baze iz PDF dokumenta na bosanskom/hrvatskom/srpskom jeziku.
-Pokreni jednom prije pokretanja API-ja.
+Pokrenuti jednom prije pokretanja API-ja.
 """
 
 import os
@@ -13,20 +13,20 @@ def main():
     print("  IZGRADNJA VEKTORSKE BAZE ZA RAG SISTEM")
     print("="*60)
     
-    # Putanja do PDF fajla (jezik: bosanski/hrvatski/srpski) 
+    # Putanja do PDF fajla (jezik: bosanski/hrvatski/srpski) - path to PDF file (language: Bosnian/Croatian/Serbian)
     pdf_path = "documents/Klinicki_vodic_za_antenatalnu_zastitu.pdf"
     
-    # Provjeri da li PDF postoji
+    # Provjeri da li PDF postoji - check if PDF exists
     if not os.path.exists(pdf_path):
-        print(f"\n❌ PDF fajl nije pronađen: {pdf_path}")
+        print(f"\nPDF fajl nije pronađen: {pdf_path}")
         print("\nMolimo te da:")
         print("  1. Kreiraš folder 'documents/'")
         print("  2. Staviš PDF dokument u taj folder")
-        print(f"  3. Preimenuješ ga u 'Klinicki_vodic_za_antenatalnu_zastitu.pdf'")
+        print(f" 3. Preimenuješ ga u 'Klinicki_vodic_za_antenatalnu_zastitu.pdf'")
         
-        # Opciono: prikaži dostupne fajlove u folderu
+        # prikaži dostupne fajlove u folderu - show available files in the folder
         if os.path.exists('documents'):
-            print("\n📁 Dostupni fajlovi u 'documents/' folderu:")
+            print("\nDostupni fajlovi u 'documents/' folderu:")
             for f in os.listdir('documents'):
                 print(f"   - {f}")
         
@@ -37,15 +37,15 @@ def main():
         else:
             sys.exit(1)
     
-    # Izgradi vektorsku bazu
-    print(f"\n📄 Učitavam PDF: {pdf_path}")
-    print("🌐 Jezik dokumenta: bosanski/hrvatski/srpski")
+    # Izgradi vektorsku bazu - build vector store
+    print(f"\nUčitavam PDF: {pdf_path}")
+    print("Jezik dokumenta: bosanski/hrvatski/srpski")
     build_vector_store_from_pdf(pdf_path, force_rebuild=True)
     
-    print("\n✅ Vektorska baza je uspješno izgrađena!")
+    print("\nVektorska baza je uspješno izgrađena!")
     print("\nSada možeš pokrenuti Flask API: python app.py")
     
-    # Opciono: testiraj sistem
+    # testiraj sistem - test the system
     test = input("\nŽeliš li testirati RAG sistem na bosanskom/hrvatskom/srpskom? (y/n): ")
     if test.lower() == 'y':
         test_rag_system(pdf_path)
@@ -64,7 +64,7 @@ def create_test_pdf_bhs():
         c = canvas.Canvas(pdf_path, pagesize=letter)
         width, height = letter
         
-        # Dodaj sadržaj na bosanskom/hrvatskom/srpskom jeziku
+        # Dodaj sadržaj na bosanskom/hrvatskom/srpskom jeziku - add content in Bosnian/Croatian/Serbian
         content = [
             "KLINIČKI VODIČ ZA ANTENATALNU ZAŠTITU",
             "",
@@ -162,7 +162,7 @@ def create_test_pdf_bhs():
                 y = height - 50
         
         c.save()
-        print(f"✅ Kreiran testni PDF na bosanskom/hrvatskom/srpskom: {pdf_path}")
+        print(f"Kreiran testni PDF na bosanskom/hrvatskom/srpskom: {pdf_path}")
         
     except ImportError:
         print("ReportLab nije instaliran. Instaliraj sa: pip install reportlab")

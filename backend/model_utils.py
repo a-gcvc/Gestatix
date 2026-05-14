@@ -13,7 +13,7 @@ _feature_cols = None
 
 
 def load_model_artifacts():
-    """Ucitava Random Forest model, label encoder i feature kolone."""
+    """Ucitava Random Forest model, label encoder i feature kolone. - load random forest model, label encoder and feature columns."""
     global _model, _label_encoder, _feature_cols
     
     if _model is None:
@@ -25,7 +25,7 @@ def load_model_artifacts():
 
 
 def preprocess_input(data_dict):
-    """Pretvara input dictionary u DataFrame spreman za predikciju."""
+    """Pretvara input dictionary u DataFrame spreman za predikciju. - Convert input dictionary to DataFrame ready for prediction."""
     
     _, _, feature_cols = load_model_artifacts()
     
@@ -35,7 +35,7 @@ def preprocess_input(data_dict):
     
     input_df = pd.DataFrame([{col: data_dict.get(col) for col in feature_cols}])
     
-    # Konverzija temperature (Fahrenheit → Celsius)
+    # Konverzija temperature (Fahrenheit → Celsius) - Convert temperature (Fahrenheit → Celsius)
     if 'tjelesna_temp' in input_df.columns:
         if input_df['tjelesna_temp'].iloc[0] > 50:
             input_df['tjelesna_temp'] = ((input_df['tjelesna_temp'] - 32) * 5/9).round(2)
@@ -47,7 +47,7 @@ def preprocess_input(data_dict):
 
 
 def predict_risk(data_dict):
-    """Vraca predikciju rizika za jedan unos."""
+    """Vraca predikciju rizika za jedan unos. - Return risk prediction for a single input."""
     model, label_encoder, _ = load_model_artifacts()
     
     input_df = preprocess_input(data_dict)
@@ -93,7 +93,7 @@ def predict_batch(data_list):
 
 
 def get_model_info():
-    """Vraca informacije o ucitanom modelu."""
+    """Vraca informacije o ucitanom modelu. - Return information about the loaded model."""
     model, label_encoder, feature_cols = load_model_artifacts()
     
     return {

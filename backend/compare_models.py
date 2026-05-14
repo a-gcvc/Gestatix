@@ -87,21 +87,21 @@ def compare_models():
     rf_cm = confusion_matrix(y_test, rf_pred)
     gb_cm = confusion_matrix(y_test, gb_pred)
     
-    print("\n📊 REZULTATI NA TEST SKUPU:")
+    print("\nREZULTATI NA TEST SKUPU:")
     print("-" * 50)
     print(f"{'Metric':<20} {'Random Forest':<20} {'Gradient Boosting':<20}")
     print("-" * 50)
     print(f"{'Accuracy':<20} {rf_acc:.4f} ({rf_acc*100:.2f}%)      {gb_acc:.4f} ({gb_acc*100:.2f}%)")
     print(f"{'AUC-ROC':<20} {rf_auc:.4f}              {gb_auc:.4f}")
     
-    print("\n📊 CONFUSION MATRICES:")
+    print("\nCONFUSION MATRICES:")
     print("-" * 50)
     print("Random Forest:")
     print(f"   TN={rf_cm[0,0]}, FP={rf_cm[0,1]}, FN={rf_cm[1,0]}, TP={rf_cm[1,1]}")
     print("\nGradient Boosting:")
     print(f"   TN={gb_cm[0,0]}, FP={gb_cm[0,1]}, FN={gb_cm[1,0]}, TP={gb_cm[1,1]}")
     
-    print("\n📋 Classification Reports:")
+    print("\nClassification Reports:")
     print("\nRandom Forest:")
     print(classification_report(y_test, rf_pred, target_names=['Low', 'High']))
     print("\nGradient Boosting:")
@@ -124,7 +124,7 @@ def compare_models():
         'importance_gb': gb_model.feature_importances_
     }).sort_values('importance_gb', ascending=False)
     
-    print("\n⭐ TOP 5 FEATURE IMPORTANCE:")
+    print("\nTOP 5 FEATURE IMPORTANCE:")
     print("-" * 50)
     print("\nRandom Forest:")
     for _, row in rf_features.head().iterrows():
@@ -139,13 +139,13 @@ def compare_models():
     print("="*70)
     
     if rf_acc > gb_acc:
-        print(f"\n✅ Random Forest je bolji (Accuracy: {rf_acc:.4f} vs {gb_acc:.4f})")
+        print(f"\nRandom Forest je bolji (Accuracy: {rf_acc:.4f} vs {gb_acc:.4f})")
     elif gb_acc > rf_acc:
-        print(f"\n✅ Gradient Boosting je bolji (Accuracy: {gb_acc:.4f} vs {rf_acc:.4f})")
+        print(f"\nGradient Boosting je bolji (Accuracy: {gb_acc:.4f} vs {rf_acc:.4f})")
     else:
-        print(f"\n🤝 Modeli su podjednako dobri")
+        print(f"\nModeli su podjednako dobri")
     
-    print(f"\n📌 Preporuka za dalje:")
+    print(f"\nPreporuka za dalje:")
     if rf_acc >= gb_acc:
         print("   - Random Forest je brži za treniranje i predikciju")
         print("   - Manje je podložan overfitting-u")
