@@ -5,8 +5,6 @@
 **Gestatix** je inteligentni klinički asistent dizajniran za predviđanje komplikacija u trudnoći i pružanje smjernica zasnovanih na medicinskim protokolima.  
 Kombinujući **mašinsko učenje (Random Forest)** i **semantičku pretragu (RAG)** nad kliničkim vodičem, Gestatix pomaže trudnicama i medicinskom osoblju da procijene rizik i dobiju personalizovane preporuke.
 
-> *“Bridging the gap between raw data and actionable health insights.”*
-
 ---
 
 ## 📋 Preduslovi
@@ -31,32 +29,32 @@ Prije nego što počnete, provjerite da li imate instalirano sljedeće:
    python --version
 
 ### 🍎 macOS
-brew install python@3.11
+    brew install python@3.11
 
 ### 🐧 Linux (Ubuntu/Debian)
-sudo apt update
-sudo apt install python3 python3-pip
+    sudo apt update
+    sudo apt install python3 python3-pip
 
 ### 📦 Instalacija biblioteka
 
 Nakon što ste instalirali Python, otvorite terminal u folderu projekta i pokrenite:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 Provjera instalacije:
 
-pip list
+    pip list
 
 ### 🚀 Pokretanje aplikacije
 1. Pokrenite backend (API server)
    cd backend
-python app.py
+    python app.py
 
 2. Otvorite aplikaciju
 
 U browseru idite na:
 
-http://localhost:5000
+    http://localhost:5000
 
 ### 🧠 Kako funkcioniše? – STAL ciklus
 
