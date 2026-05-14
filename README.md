@@ -25,8 +25,7 @@ Prije nego što počnete, provjerite da li imate instalirano sljedeće:
 3. **OBAVEZNO** označite: ✅ *"Add Python to PATH"*
 4. Kliknite *"Install Now"*
 5. Provjerite instalaciju:
-   ```bash
-python --version
+   ```bash python --version
 
 ### 🍎 macOS
     brew install python@3.11
