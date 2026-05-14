@@ -66,21 +66,6 @@ Gestatix koristi STAL ciklus – Sense, Think, Act, Learn:
 | **🎯 Act** | Prikaz rizika i personalizovanih preporuka iz kliničkog vodiča |
 | **📚 Learn** | Feedback sistem – model se poboljšava kroz interakciju |
 
-Gestatix/
-```text
-SENSE-THINK-ACT-LEARN/
-├── backend/                 # Flask API, ML model, RAG sistem
-│   ├── app.py               # Glavna Flask aplikacija
-│   ├── model_train_rf.py    # Skripta za treniranje Random Forest modela
-│   ├── rag_chroma.py        # Logika za ChromaDB i semantičku pretragu
-│   ├── feedback_manager.py  # Upravljanje povratnim informacijama korisnika
-│   └── models/              # Folder za sačuvane (.pkl) modele i feedback
-├── frontend/                # Korisnički interfejs (HTML, CSS, JS - Chart.js)
-├── data/                    # Datasetovi korišteni za treniranje i testiranje
-├── documents/               # Izvorna dokumentacija (npr. Klinički vodič PDF)
-├── requirements.txt         # Lista svih Python biblioteka (Flask, scikit-learn...)
-└── README.md                # Dokumentacija projekta
-
 ### 📊 Tehnologije
 | Tehnologija | Namjena |
 | :--- | :--- |
