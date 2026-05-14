@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="bs">
 <head>
@@ -27,7 +26,7 @@
                     Započni svoje putovanje
                     <i class="fas fa-arrow-right"></i>
                 </button>
-                <button type="button" id="how-it-works-btn" class="btn-how" style="background: transparent; border: 2px solid #e91e63; color: #e91e63; padding: 14px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">
+                <button type="button" id="how-it-works-btn" class="btn-how">
                     <i class="fas fa-question-circle"></i>
                     Kako Gestatix radi?
                 </button>
@@ -196,7 +195,7 @@
                         </div>
                     </div>
                 </div>
- 
+
                 <!-- Dugmad za akciju -->
                 <div class="form-actions">
                     <button type="reset" class="btn-reset"><i class="fas fa-eraser"></i> Resetuj formu</button>
@@ -204,24 +203,27 @@
                 </div>
             </form>
 
-            <!-- Rezultati predikcije (inicijalno skriveni) -->
             <div id="results-section" style="display: none;">
-                <div class="results-header">
-                    <h2><i class="fas fa-chart-simple"></i> Rezultati procjene</h2>
+            <div class="results-header">
+                <h2><i class="fas fa-chart-simple"></i> Rezultati procjene</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button type="button" id="retrain-btn" class="btn-retrain" style="background: #9c27b0; color: white; padding: 8px 20px; border: none; border-radius: 30px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease;">
+                        <i class="fas fa-sync-alt"></i> Poboljšaj model
+                    </button>
                     <button type="button" id="new-assessment" class="btn-new"><i class="fas fa-plus-circle"></i> Nova procjena</button>
                 </div>
+            </div>
+            
+            <!-- Status retraining-a (indikator) -->
+            <div id="retraining-status" style="margin: 1rem 0; padding: 0.8rem; background: #f5f5f5; border-radius: 12px; font-size: 0.85rem; text-align: center; display: none;">
+                <i class="fas fa-spinner fa-spin"></i> <span id="retraining-message">Model se poboljšava...</span>
+            </div>
 
                 <!-- Risk indikator -->
                 <div class="risk-card" id="risk-card">
                     <div class="risk-level">
                         <i id="risk-icon" class="fas fa-circle-info"></i>
                         <span id="risk-text">Nivo rizika: </span>
-                    </div>
-                    <div class="risk-confidence">
-                        Pouzdanost predikcije: <span id="confidence-value">0%</span>
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="confidence-bar" style="width: 0%;"></div>
                     </div>
                 </div>
 
@@ -234,6 +236,18 @@
                     <div class="chart-card">
                         <h3>Važnost ključnih faktora</h3>
                         <canvas id="featureChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dodatne informacije: RAG preporuke -->
+                <div class="rag-section">
+                    <button type="button" id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
+                    <div id="rag-content" style="display: none;">
+                        <div class="rag-header">
+                            <i class="fas fa-graduation-cap"></i> Prema Kliničkom vodiču za antenatalnu zaštitu (2021.)
+                        </div>
+                        <div id="rag-recommendations" class="rag-text"></div>
+                        <p class="rag-note"><i class="fas fa-link"></i> Izvor: <a href="https://fmoh.gov.ba/uploads/files/1.%20Klinicki%20vodic%20za%20antenatalnu%20zastitu%20LAT%20FINAL%20WEB.pdf" target="_blank">Klinički vodič za antenatalnu zaštitu</a></p>
                     </div>
                 </div>
 
@@ -256,26 +270,12 @@
                 <div id="feedback-stats" style="margin-top: 1rem; font-size: 0.8rem; text-align: center; color: #7a5d66; display: none;">
                     <i class="fas fa-chart-simple"></i> <span id="stats-text"></span>
                 </div>
-
-                <!-- Dodatne informacije: RAG preporuke -->
-                <div class="rag-section">
-                    <button type="button" id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
-                    <div id="rag-content" style="display: none;">
-                        <div class="rag-header">
-                            <i class="fas fa-graduation-cap"></i> Prema Kliničkom vodiču za antenatalnu zaštitu (2021.)
-                        </div>
-                        <div id="rag-recommendations" class="rag-text">
-                            <!-- RAG preporuke će se učitati ovdje -->
-                        </div>
-                        <p class="rag-note"><i class="fas fa-link"></i> Izvor: <a href="https://fmoh.gov.ba/uploads/files/1.%20Klinicki%20vodic%20za%20antenatalnu%20zastitu%20LAT%20FINAL%20WEB.pdf" target="_blank">Klinički vodič za antenatalnu zaštitu</a></p>
-                    </div>
-                </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="footer" style="background: #2d1f24; color: #f8ced9; text-align: center; padding: 1.5rem; margin-top: auto;">
+    <footer class="footer">
         <div class="container">
             <p>&copy; 2026 Gestatix. Sva prava zadržana (All rights reserved).</p>
         </div>

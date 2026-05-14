@@ -343,6 +343,19 @@ async function displayResults(riskData, ragText, inputData) {
     const confidenceSpan = document.getElementById('confidence-value');
     const confidenceBar = document.getElementById('confidence-bar');
     
+    // DODATAK: Element za preporuku akcije (kreiraj ako ne postoji)
+    let actionRecommendation = document.getElementById('action-recommendation');
+    if (!actionRecommendation && riskCard) {
+        actionRecommendation = document.createElement('div');
+        actionRecommendation.id = 'action-recommendation';
+        actionRecommendation.style.marginTop = '1rem';
+        actionRecommendation.style.padding = '0.8rem';
+        actionRecommendation.style.borderRadius = '12px';
+        actionRecommendation.style.fontWeight = '500';
+        actionRecommendation.style.textAlign = 'center';
+        riskCard.appendChild(actionRecommendation);
+    }
+    
     if (riskLevel === 'High') {
         if (riskCard) riskCard.style.background = 'linear-gradient(135deg, #fff0f3, #ffe0e8)';
         if (riskIcon) {
@@ -350,6 +363,22 @@ async function displayResults(riskData, ragText, inputData) {
             riskIcon.style.color = '#e91e63';
         }
         if (riskTextSpan) riskTextSpan.innerHTML = `Nivo rizika: <strong style="color:#e91e63">VISOK RIZIK</strong>`;
+        
+        // DODATAK: Preporuka za VISOK rizik - JAVITI SE LJEKARU
+        if (actionRecommendation) {
+            actionRecommendation.style.background = '#ffebee';
+            actionRecommendation.style.borderLeft = '4px solid #e91e63';
+            actionRecommendation.style.color = '#c2185b';
+            actionRecommendation.innerHTML = `
+                <i class="fas fa-stethoscope" style="color: #e91e63; margin-right: 8px;"></i>
+                <strong>⚠️ VAŽNA PREPORUKA:</strong><br>
+                Vaši parametri ukazuju na povišen rizik po zdravlje vas i vaše bebe. <strong>Preporučujemo vam da se što prije javite svom ginekologu</strong> radi dodatnih pretraga i pravovremene intervencije.
+                <div style="font-size: 0.85rem; margin-top: 8px; color: #ad1457;">
+                    📞 Kontaktirajte vašu ambulantu ili hitnu službu ako osjetite bilo kakve simptome.
+                </div>
+            `;
+        }
+        
     } else {
         if (riskCard) riskCard.style.background = 'linear-gradient(135deg, #e8f5e9, #e0f2f1)';
         if (riskIcon) {
@@ -357,12 +386,32 @@ async function displayResults(riskData, ragText, inputData) {
             riskIcon.style.color = '#2e7d32';
         }
         if (riskTextSpan) riskTextSpan.innerHTML = `Nivo rizika: <strong style="color:#2e7d32">NIZAK RIZIK</strong>`;
+        
+        // DODATAK: Preporuka za NIZAK rizik
+        if (actionRecommendation) {
+            actionRecommendation.style.background = '#e8f5e9';
+            actionRecommendation.style.borderLeft = '4px solid #4caf50';
+            actionRecommendation.style.color = '#1b5e20';
+            actionRecommendation.innerHTML = `
+                <i class="fas fa-heartbeat" style="color: #4caf50; margin-right: 8px;"></i>
+                <strong>PREPORUKA:</strong><br>
+                Vaši parametri su u okviru normalnih vrijednosti. Nastavite sa redovnim prenatalnim pregledima i zdravim načinom života.
+                <div style="font-size: 0.85rem; margin-top: 8px; color: #2e7d32;">
+                    🏃‍♀️ Preporučuje se umjerena fizička aktivnost (šetnja, plivanje) i uravnotežena ishrana.
+                </div>
+            `;
+        }
     }
     
     if (confidenceSpan) confidenceSpan.innerText = `${confidence}%`;
     if (confidenceBar) confidenceBar.style.width = `${confidence}%`;
     
-    // Pie chart
+    // ============================================================
+    // PIE CHART sa procentima i responzivnošću
+    // ============================================================
+    
+    const isMobile = window.innerWidth < 768;
+    
     const ctx = document.getElementById('riskChart');
     if (ctx) {
         if (riskChart) riskChart.destroy();
@@ -373,18 +422,89 @@ async function displayResults(riskData, ragText, inputData) {
                 datasets: [{
                     data: [lowProb, highProb],
                     backgroundColor: ['#81c784', '#f06292'],
-                    borderWidth: 0
+                    borderWidth: 0,
+                    hoverOffset: 15,
+                    cutout: isMobile ? '60%' : '65%'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                plugins: { legend: { position: 'bottom' } }
+                cutout: isMobile ? '60%' : '65%',
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            font: { size: isMobile ? 10 : 12, weight: 'bold' },
+                            padding: isMobile ? 10 : 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: isMobile ? 10 : 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
     
-    // Bar chart - učitaj stvarne vrijednosti iz modela
+    // DODATAK: Centralni tekst sa procentima (RESPONZIVNO - POPRAVLJENO)
+    const chartContainer = document.getElementById('riskChart').parentElement;
+    let centerText = document.getElementById('chart-center-text');
+    
+    // Ukloni postojeći tekst ako postoji da se ne duplira
+    if (centerText && centerText.parentNode) {
+        centerText.remove();
+    }
+    
+    if (chartContainer && !document.getElementById('chart-center-text')) {
+        centerText = document.createElement('div');
+        centerText.id = 'chart-center-text';
+        chartContainer.style.position = 'relative';
+        chartContainer.appendChild(centerText);
+    }
+    
+    if (centerText) {
+        const dominantRisk = highProb > lowProb ? 'Visok rizik' : 'Nizak rizik';
+        const dominantPercent = Math.max(highProb, lowProb).toFixed(1);
+        const fontSize = isMobile ? '1rem' : '1.5rem';
+        const subFontSize = isMobile ? '0.55rem' : '0.7rem';
+        
+        centerText.style.position = 'absolute';
+        centerText.style.top = '50%';
+        centerText.style.left = '50%';
+        centerText.style.transform = 'translate(-50%, -50%)';
+        centerText.style.textAlign = 'center';
+        centerText.style.pointerEvents = 'none';
+        centerText.style.zIndex = '10';
+        centerText.style.backgroundColor = 'rgba(255,255,255,0.9)';
+        centerText.style.borderRadius = '50%';
+        centerText.style.padding = isMobile ? '5px' : '10px';
+        centerText.style.minWidth = isMobile ? '55px' : '80px';
+        centerText.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+        
+        centerText.innerHTML = `
+            <div style="font-size: ${fontSize}; font-weight: 700; color: ${highProb > lowProb ? '#e91e63' : '#4caf50'}; line-height: 1.2;">
+                ${dominantPercent}%
+            </div>
+            <div style="font-size: ${subFontSize}; color: #7a5d66; margin-top: 4px;">
+                ${dominantRisk}
+            </div>
+        `;
+    }
+    
+    // ============================================================
+    // BAR CHART - Feature Importance
+    // ============================================================
+    
     let featureData;
     try {
         featureData = await loadFeatureImportance();
@@ -399,7 +519,7 @@ async function displayResults(riskData, ragText, inputData) {
     
     // Mapa za prikaz imena na bosanskom
     const featureNamesMap = {
-        'dijabetes': 'Dijabetes',
+        'dijabetes': 'Dijagnoza dijabetesa',
         'glukoza_u_krvi': 'Glukoza u krvi',
         'otkucaji_srca': 'Otkucaji srca',
         'BMI': 'BMI',
@@ -415,7 +535,6 @@ async function displayResults(riskData, ragText, inputData) {
     const displayLabels = featureData.labels.slice(0, 5).map(label => 
         featureNamesMap[label] || label
     );
-    const displayValues = featureData.values.slice(0, 5);
     const displayPercentages = featureData.percentages.slice(0, 5);
     
     const ctx2 = document.getElementById('featureChart');
@@ -429,29 +548,34 @@ async function displayResults(riskData, ragText, inputData) {
                     label: 'Utjecaj na rizik (%)',
                     data: displayPercentages,
                     backgroundColor: '#f06292',
-                    borderRadius: 8
+                    borderRadius: 8,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.raw.toFixed(1)}% utjecaja na predikciju rizika`;
+                            }
+                        }
+                    }
+                },
                 scales: { 
                     y: { 
                         beginAtZero: true, 
                         max: 30,
-                        title: { display: true, text: 'Utjecaj (%)' }
+                        title: { display: true, text: 'Utjecaj (%)', font: { size: 10 } },
+                        grid: { color: '#f0e0e6' }
                     },
                     x: {
-                        title: { display: true, text: 'Faktori rizika' }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.raw.toFixed(1)}% utjecaja na predikciju`;
-                            }
-                        }
+                        title: { display: true, text: 'Faktori rizika', font: { size: 10 } },
+                        ticks: { font: { size: isMobile ? 9 : 10 }, rotation: isMobile ? 25 : 0 }
                     }
                 }
             }
@@ -464,6 +588,74 @@ async function displayResults(riskData, ragText, inputData) {
         ragDiv.innerHTML = ragText ? ragText.replace(/\n/g, '<br>') : '<p>Nema dodatnih preporuka za prikaz.</p>';
     }
 }
+
+// Dodaj event listener za resize prozora da se chart prilagodi (dodajte na kraj script.js)
+window.addEventListener('resize', function() {
+    if (riskChart) {
+        const isMobile = window.innerWidth < 768;
+        riskChart.config.options.cutout = isMobile ? '60%' : '65%';
+        riskChart.config.options.plugins.legend.labels.font.size = isMobile ? 10 : 12;
+        riskChart.config.options.plugins.legend.labels.padding = isMobile ? 10 : 15;
+        riskChart.update();
+    }
+    
+    // Ažuriraj centralni tekst na pie chart-u
+    const centerTextElem = document.getElementById('chart-center-text');
+    if (centerTextElem) {
+        const isMobileResize = window.innerWidth < 768;
+        const fontSize = isMobileResize ? '1rem' : '1.5rem';
+        const subFontSize = isMobileResize ? '0.55rem' : '0.7rem';
+        const padding = isMobileResize ? '5px' : '10px';
+        const minWidth = isMobileResize ? '55px' : '80px';
+        
+        centerTextElem.style.padding = padding;
+        centerTextElem.style.minWidth = minWidth;
+        
+        const titleDiv = centerTextElem.querySelector('div:first-child');
+        const subtitleDiv = centerTextElem.querySelector('div:last-child');
+        if (titleDiv) titleDiv.style.fontSize = fontSize;
+        if (subtitleDiv) subtitleDiv.style.fontSize = subFontSize;
+    }
+    
+    // Ažuriraj bar chart
+    if (featureChart) {
+        const isMobileResize = window.innerWidth < 768;
+        featureChart.config.options.scales.x.ticks.rotation = isMobileResize ? 25 : 0;
+        featureChart.config.options.scales.x.ticks.font.size = isMobileResize ? 9 : 10;
+        featureChart.update();
+    }
+});
+
+// Dodaj event listener za resize prozora da se chart prilagodi
+window.addEventListener('resize', function() {
+    if (riskChart) {
+        const isMobile = window.innerWidth < 768;
+        riskChart.config.options.cutout = isMobile ? '60%' : '65%';
+        riskChart.config.options.plugins.legend.labels.font.size = isMobile ? 10 : 12;
+        riskChart.config.options.plugins.legend.labels.padding = isMobile ? 10 : 15;
+        riskChart.update();
+    }
+    
+    // Ažuriraj centralni tekst na pie chart-u
+    const centerTextElem = document.getElementById('chart-center-text');
+    if (centerTextElem) {
+        const isMobileResize = window.innerWidth < 768;
+        const fontSize = isMobileResize ? '1.2rem' : '1.8rem';
+        const subFontSize = isMobileResize ? '0.65rem' : '0.75rem';
+        const titleDiv = centerTextElem.querySelector('div:first-child');
+        const subtitleDiv = centerTextElem.querySelector('div:last-child');
+        if (titleDiv) titleDiv.style.fontSize = fontSize;
+        if (subtitleDiv) subtitleDiv.style.fontSize = subFontSize;
+    }
+    
+    // Ažuriraj bar chart
+    if (featureChart) {
+        const isMobileResize = window.innerWidth < 768;
+        featureChart.config.options.scales.x.ticks.rotation = isMobileResize ? 25 : 0;
+        featureChart.config.options.scales.x.ticks.font.size = isMobileResize ? 9 : 10;
+        featureChart.update();
+    }
+});
 
 // Sačuvaj zadnju predikciju za feedback
 function saveLastPrediction(riskData, inputData) {
@@ -785,6 +977,106 @@ const cycleDescriptions = {
     }
 };
 
+// Prikaz statusa retraining-a
+function showRetrainingStatus(show, message = '') {
+    const statusDiv = document.getElementById('retraining-status');
+    const messageSpan = document.getElementById('retraining-message');
+    if (statusDiv) {
+        if (show) {
+            statusDiv.style.display = 'block';
+            if (messageSpan) messageSpan.innerHTML = message;
+        } else {
+            statusDiv.style.display = 'none';
+        }
+    }
+}
+
+// Praćenje broja feedbackova i provjera da li je potreban retraining
+async function checkAndNotifyRetraining() {
+    try {
+        const response = await fetch(`${API_BASE}/feedback/stats`);
+        if (response.ok) {
+            const stats = await response.json();
+            const newSamples = stats.new_samples_pending || 0;
+            const threshold = stats.retrain_threshold || 10;
+            const needsRetraining = stats.needs_retraining || false;
+            
+            // Ažuriraj prikaz u STAL statistici
+            const stalStatsDiv = document.getElementById('stal-stats');
+            if (stalStatsDiv && stats.total_feedback > 0) {
+                stalStatsDiv.innerHTML = `
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem;">
+                        <span><i class="fas fa-comments"></i> Feedback: ${stats.total_feedback}</span>
+                        <span><i class="fas fa-check-circle"></i> Tačnih: ${stats.agreed_with_model}</span>
+                        <span><i class="fas fa-times-circle"></i> Netočnih: ${stats.disagreed_with_model}</span>
+                        <span><i class="fas fa-sync-alt"></i> Nova za učenje: ${newSamples}/${threshold}</span>
+                    </div>
+                `;
+            }
+            
+            // Ako je potreban retraining, pitaj korisnika
+            if (needsRetraining && newSamples >= threshold) {
+                const userConfirmed = confirm(`📊 Poboljšanje modela\n\nPrikupljeno je ${newSamples} novih primjera za učenje.\n\nŽelite li poboljšati model sada?`);
+                if (userConfirmed) {
+                    await triggerRetraining();
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('Nije moguće provjeriti status retraining-a:', err);
+    }
+}
+// Dugme za retraining
+document.getElementById('retrain-btn')?.addEventListener('click', triggerRetraining);
+
+// Redovna provjera da li je potreban retraining
+setInterval(() => {
+    checkAndNotifyRetraining();
+}, 30000); // svakih 30 sekundi
+
+// Ručno pokreni retraining (poboljšana verzija)
+async function triggerRetraining() {
+    showRetrainingStatus(true, 'Pokrećem poboljšanje modela... Molimo sačekajte.');
+    
+    try {
+        const response = await fetch(`${API_BASE}/feedback/retrain`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ force: true })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showRetrainingStatus(true, `✅ Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
+            
+            // Sakrij poruku nakon 5 sekundi
+            setTimeout(() => {
+                showRetrainingStatus(false);
+            }, 5000);
+            
+            // Osveži statistiku
+            await loadFeedbackStats();
+            await loadStalStats();
+            
+            alert(`✅ Model je uspješno poboljšan!\n\nNovi accuracy: ${(result.accuracy * 100).toFixed(2)}%\nKorišteno: ${result.total_samples} primjera (${result.feedback_samples} feedbackova)`);
+        } else {
+            showRetrainingStatus(true, `⚠️ ${result.message}`);
+            setTimeout(() => {
+                showRetrainingStatus(false);
+            }, 3000);
+            alert(`⚠️ ${result.message}`);
+        }
+    } catch (err) {
+        console.error('Retraining greška:', err);
+        showRetrainingStatus(true, '❌ Greška pri poboljšanju modela');
+        setTimeout(() => {
+            showRetrainingStatus(false);
+        }, 3000);
+        alert('Greška pri poboljšanju modela.');
+    }
+}
+
 // Inicijalizacija STAL ciklusa
 function initStalCycle() {
     const steps = document.querySelectorAll('.cycle-step');
@@ -871,130 +1163,94 @@ async function loadStalStats() {
 }
 
 // ============================================================
-// EVENT LISTENERI 
+// INICIJALIZACIJA — svi event listeneri registrovani JEDNOM,
+// unutar DOMContentLoaded kako bi DOM bio siguran dostupan
 // ============================================================
 
-// Start putovanja
-startBtn.addEventListener('click', () => {
-    heroSection.style.display = 'none';
-    appMain.style.display = 'block';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-// Povratak na početnu sa FORME (ne sa rezultata)
-backBtn.addEventListener('click', () => {
-    appMain.style.display = 'none';
-    heroSection.style.display = 'flex';
-});
-
-// Povratak sa STAL na početnu (ISTI STIL kao backBtn)
-backToHeroFromStal?.addEventListener('click', () => {
-    stalSection.style.display = 'none';
-    heroSection.style.display = 'flex';
-});
-
-// Nova procjena - OVDJE SE RESETUJE FORMA
-newAssessmentBtn.addEventListener('click', resetAndShowForm);
-
-// Toggle RAG preporuke
-toggleRagBtn.addEventListener('click', () => {
-    if (ragContent.style.display === 'none') {
-        ragContent.style.display = 'block';
-        toggleRagBtn.innerHTML = '<i class="fas fa-book-open"></i> Sakrij preporuke';
-    } else {
-        ragContent.style.display = 'none';
-        toggleRagBtn.innerHTML = '<i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča';
-    }
-});
-
-// Reset dugme na formi
-form.addEventListener('reset', function() {
-    setTimeout(() => {
-        const errorSpans = document.querySelectorAll('.error-message');
-        errorSpans.forEach(span => span.innerText = '');
-    }, 10);
-});
-
-// Feedback dugmad - NE RESETUJU FORMU, samo šalju feedback
-document.getElementById('feedback-yes')?.addEventListener('click', function(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('Feedback YES kliknut');
-    event.stopPropagation(); sendFeedback(true);
-});
-
-document.getElementById('feedback-no')?.addEventListener('click', function(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('Feedback NO kliknut');
-    const correctRisk = confirm('Da li je tačan rizik "Low" (Nizak) ili "High" (Visok)?\n\nPritisnite OK za "High", Cancel za "Low"');
-    const risk = correctRisk ? 'High' : 'Low';
-    sendFeedback(false, risk);
-});
-
-// Prikaz STAL stranice (Kako Gestatix radi?)
-
-
-// Inicijalizacija
-form.style.display = 'block';
-resultsSection.style.display = 'none';
-setupNumericInputValidation();
-loadFeedbackStats();
-
-console.log('App inicijalizovan!');
-
-// Centralizovana inicijalizacija
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Provjera API statusa samo jednom
+
+    // 1. Inicijalni prikaz — forma vidljiva, rezultati skriveni
+    form.style.display = 'block';
+    resultsSection.style.display = 'none';
+
+    // 2. Provjera API statusa i učitavanje statistike
     checkAPIStatus();
     setupNumericInputValidation();
     loadFeedbackStats();
 
-    // 2. Jedinstven listener za formu
-    const riskForm = document.getElementById('risk-form');
-    if (riskForm) {
-        // Uklanjamo sve stare listenere (ako postoje) i dodajemo jedan čisti
-        riskForm.onsubmit = null; 
-        riskForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            e.stopPropagation();
-            console.log('Forma pokrenuta...');
-            submitAssessment();
-        });
-    }
+    console.log('App inicijalizovan!');
 
-    // 3. Navigacija - Započni putovanje
-    startBtn?.addEventListener('click', () => {
-        heroSection.style.display = 'none';
-        appMain.style.display = 'block';
-        window.scrollTo(0, 0);
+    // 3. Forma — jedinstven submit listener, sprječava page reload
+    form.onsubmit = null; // ukloni eventualne inline handlere
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        submitAssessment();
     });
 
-    // 4. Navigacija - Kako radi (STAL)
-    const handleNavigation = (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+    // Reset dugme na formi
+    form.addEventListener('reset', function() {
+        setTimeout(() => {
+            document.querySelectorAll('.error-message')
+                .forEach(span => span.innerText = '');
+        }, 10);
+    });
+
+    // 4. Navigacija — "Započni putovanje"
+    startBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        heroSection.style.display = 'none';
+        appMain.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 5. Navigacija — "Kako Gestatix radi?" (STAL)
+    howItWorksBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         heroSection.style.display = 'none';
         appMain.style.display = 'none';
         stalSection.style.display = 'block';
-        if (typeof initStalCycle === 'function') initStalCycle();
-    };
+        initStalCycle();
+        loadStalStats();
+    });
 
-    if (howItWorksBtn) {
-        howItWorksBtn.onclick = handleNavigation;
-    }
-    
-    // Nazad dugmad
+    // 6. Povratak na početnu sa forme
     backBtn?.addEventListener('click', () => {
         appMain.style.display = 'none';
-        heroSection.style.display = 'block';
+        heroSection.style.display = 'flex';
     });
 
+    // 7. Povratak na početnu sa STAL stranice
     backToHeroFromStal?.addEventListener('click', () => {
         stalSection.style.display = 'none';
-        heroSection.style.display = 'block';
+        heroSection.style.display = 'flex';
     });
-});
 
+    // 8. Nova procjena
+    newAssessmentBtn?.addEventListener('click', resetAndShowForm);
+
+    // 9. Toggle RAG preporuke
+    toggleRagBtn?.addEventListener('click', () => {
+        const isHidden = ragContent.style.display === 'none';
+        ragContent.style.display = isHidden ? 'block' : 'none';
+        toggleRagBtn.innerHTML = isHidden
+            ? '<i class="fas fa-book-open"></i> Sakrij preporuke'
+            : '<i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča';
+    });
+
+    // 10. Feedback dugmad
+    document.getElementById('feedback-yes')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        sendFeedback(true);
+    });
+
+    document.getElementById('feedback-no')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const correctRisk = confirm('Da li je tačan rizik "Low" (Nizak) ili "High" (Visok)?\n\nPritisnite OK za "High", Cancel za "Low"');
+        sendFeedback(false, correctRisk ? 'High' : 'Low');
+    });
+
+});

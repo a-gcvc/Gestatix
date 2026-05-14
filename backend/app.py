@@ -3,7 +3,7 @@ app.py
 Flask API za predikciju rizika trudnoće koristeći Random Forest model i RAG preporuke.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import numpy as np
 from datetime import datetime
@@ -16,6 +16,14 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 feedback_manager = get_feedback_manager()
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('../frontend', 'index.html')
+
+@app.route('/<path:path>')
+def serve_frontend(path):
+    return send_from_directory('../frontend', path)
 
 @app.after_request
 def after_request(response):

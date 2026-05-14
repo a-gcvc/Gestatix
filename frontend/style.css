@@ -97,6 +97,68 @@ body {
     box-shadow: 0 12px 28px rgba(233,30,99,0.4);
 }
 
+/* Dodatno dugme - Kako Gestatix radi */
+.btn-how {
+    background: transparent;
+    border: 2px solid #e91e63;
+    color: #e91e63;
+    padding: 14px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-how:hover {
+    background: rgba(233,30,99,0.1);
+    transform: translateY(-3px);
+}
+
+/* Usklađena dugmad za rezultate */
+.results-header .btn-retrain,
+.results-header .btn-new {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.results-header .btn-retrain {
+    background: #9c27b0;
+    color: white;
+}
+
+.results-header .btn-retrain:hover {
+    background: #7b1fa2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(156,39,176,0.3);
+}
+
+.results-header .btn-new {
+    background: linear-gradient(135deg, #e91e63, #f06292);
+    color: white;
+}
+
+.results-header .btn-new:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(233,30,99,0.4);
+}
+
+.results-header .btn-retrain:active,
+.results-header .btn-new:active {
+    transform: translateY(0);
+}
+
 /* Cvijeće u pozadini */
 .hero-flowers {
     position: absolute;
@@ -383,30 +445,82 @@ body {
     transition: width 0.6s ease;
 }
 
-/* Charts */
+/* ========== CHARTS - RESponzivno ========== */
 .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 2rem;
     margin-bottom: 2rem;
 }
 
 .chart-card {
+    position: relative;
     background: white;
     border-radius: 24px;
     padding: 1rem;
     box-shadow: 0 4px 16px rgba(0,0,0,0.05);
     text-align: center;
+    transition: all 0.3s ease;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .chart-card h3 {
     color: #ad1457;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
 }
 
-canvas {
+/* Container za pie chart - RESPONZIVAN */
+#riskChart {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 280px;
+    max-height: 280px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Centralni tekst na pie chart-u */
+.chart-card:first-child {
+    position: relative;
+}
+
+#chart-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 10;
+    width: auto;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    padding: 10px;
+    min-width: 100px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#chart-center-text div:first-child {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+#chart-center-text div:last-child {
+    font-size: 0.7rem;
+    color: #7a5d66;
+    margin-top: 4px;
+}
+
+/* Feature Chart - RESPONZIVAN */
+#featureChart {
+    width: 100% !important;
+    height: auto !important;
     max-width: 100%;
-    height: auto;
     max-height: 280px;
 }
 
@@ -494,7 +608,7 @@ canvas {
     animation: spin 1s linear infinite;
 }
 
-/* Dodajte u style.css */
+/* Input number stilovi */
 input[type="number"] {
     -moz-appearance: textfield;
 }
@@ -512,6 +626,22 @@ input[type="number"]::-webkit-outer-spin-button {
     background-color: #fff0f3;
 }
 
+/* Footer */
+.footer {
+    background: #2d1f24;
+    color: #f8ced9;
+    text-align: center;
+    padding: 0.6rem 0.8rem;
+    margin-top: auto;
+    font-size: 0.7rem;
+    letter-spacing: 0.3px;
+}
+
+.footer p {
+    margin: 0;
+    line-height: 1.3;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -523,21 +653,140 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 500;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .hero h1 { font-size: 2.5rem; }
-    .hero-subtitle { font-size: 1.2rem; }
-    .container { padding: 1rem; }
-    .form-grid { grid-template-columns: 1fr; gap: 1rem; }
-    .form-section { padding: 1rem; }
-    .results-header { flex-direction: column; text-align: center; }
-    .btn-back { position: static; margin-bottom: 1rem; display: inline-block; }
-    .input-row { flex-direction: column; gap: 0; }
-    .form-actions { flex-direction: column; align-items: stretch; }
-    .btn-reset, .btn-submit { text-align: center; }
-}
-
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== RESPONZIVNOST - MOBILNI UREĐAJI ========== */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .charts-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .chart-card {
+        min-height: 280px;
+        padding: 0.8rem;
+    }
+    
+    .chart-card h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    #riskChart {
+        max-width: 200px;
+        max-height: 200px;
+    }
+    
+    #chart-center-text {
+        min-width: 70px;
+        padding: 5px;
+    }
+    
+    #chart-center-text div:first-child {
+        font-size: 1rem;
+    }
+    
+    #chart-center-text div:last-child {
+        font-size: 0.55rem;
+    }
+    
+    #featureChart {
+        max-height: 220px;
+    }
+    
+    .risk-level span {
+        font-size: 1.2rem;
+    }
+    
+    .risk-level i {
+        font-size: 1.5rem;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .btn-back {
+        position: static;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .footer {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.6rem;
+    }
+
+    .results-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-retrain, .btn-new {
+        padding: 6px 16px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Dugme za retraining */
+.btn-retrain {
+    background: #9c27b0;
+    color: white;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-retrain:hover {
+    background: #7b1fa2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(156,39,176,0.3);
+}
+
+.btn-retrain:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+    .chart-card {
+        min-height: 250px;
+        padding: 0.5rem;
+    }
+    
+    #riskChart {
+        max-width: 160px;
+        max-height: 160px;
+    }
+    
+    #chart-center-text {
+        min-width: 55px;
+    }
+    
+    #chart-center-text div:first-child {
+        font-size: 0.85rem;
+    }
+    
+    #chart-center-text div:last-child {
+        font-size: 0.5rem;
+    }
+    
+    #featureChart {
+        max-height: 200px;
+    }
 }
