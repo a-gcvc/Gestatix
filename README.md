@@ -67,17 +67,17 @@ Gestatix koristi STAL ciklus – Sense, Think, Act, Learn:
 | **📚 Learn** | Feedback sistem – model se poboljšava kroz interakciju |
 
 Gestatix/
-    ├── backend/                 # Flask API, ML model, RAG sistem
-    │   ├── app.py
-    │   ├── model_train_rf.py
-    │   ├── rag_chroma.py
-    │   ├── feedback_manager.py
-    │   └── models/              # Trenirani modeli i feedback podaci
-    ├── frontend/                # HTML, CSS, JavaScript
-    ├── data/                    # Dataset za trening
-    ├── documents/               # Klinički vodič (PDF)
-    ├── requirements.txt         # Python zavisnosti
-    └── README.md
+├── backend/                 # Flask API, ML model, RAG sistem
+│   ├── app.py
+│   ├── model_train_rf.py
+│   ├── rag_chroma.py
+│  ├── feedback_manager.py
+│   └── models/              # Trenirani modeli i feedback podaci
+├── frontend/                # HTML, CSS, JavaScript
+├── data/                    # Dataset za trening
+├── documents/               # Klinički vodič (PDF)
+├── requirements.txt         # Python zavisnosti
+└── README.md
 
 ### 📊 Tehnologije
 | Tehnologija | Namjena |
