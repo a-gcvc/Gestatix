@@ -59,16 +59,8 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-# Modeli (trenirani ML modeli - mogu biti veliki)
-models/
-*.pkl
-*.joblib
-*.h5
-*.pth
-*.pt
-model_*.pkl
 
-# Chroma vektorska baza (MOŽE BITI VEOMA VELIKA!)
+# Chroma vektorska baza 
 chroma_db/
 chroma/
 *.chroma
@@ -93,12 +85,7 @@ tmp/
 *.log
 logs/
 
-# Dataset (ako je veliki ili osjetljiv)
-data/*.csv
-*.csv
-!sample_data.csv   # ako želiš share-ovati mali sample
-
-# SQLite baze (ako ih koristiš)
+# SQLite baze 
 *.db
 *.sqlite
 *.sqlite3
