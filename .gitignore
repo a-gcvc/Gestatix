@@ -66,11 +66,6 @@ chroma/
 *.chroma
 chroma.sqlite3
 
-# PDF dokumenti (ako su pod autorskim pravima)
-documents/*.pdf
-*.pdf
-!requirements.pdf  # ako imaš neki javni dokument koji želiš share-ovati
-
 # Uploadovani fajlovi (ako korisnici upload-uju PDF-ove)
 uploads/
 temp/
