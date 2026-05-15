@@ -78,9 +78,32 @@ def load_and_prepare_data(csv_path='data/dataset.csv'):
 
 
 def encode_target(y):
-    """Enkodira target varijablu (Low/High -> 0/1). - Encode target variable (Low/High -> 0/1)."""
+    """
+    Enkodira target varijablu sa eksplicitnim i garantovanim mappingom:
+        Low  → 0
+        High → 1
+
+    NAPOMENA: NE koristimo LabelEncoder.fit() jer on sortira alfabetski
+    što bi dalo High=0, Low=1 — suprotno od željenog.
+    Umjesto toga, koristimo eksplicitno mapiranje i ručno postavljamo
+    classes_ atribut kako bi label_encoder.inverse_transform() radio ispravno.
+    """
+    mapping = {'Low': 0, 'High': 1}
+    y_encoded = y.map(mapping).values
+
+    # Provjeri da nema NaN (nepoznatih vrijednosti) - Check for unknown values
+    if pd.isnull(y_encoded).any():
+        unknown = y[~y.isin(mapping.keys())].unique()
+        raise ValueError(f"Nepoznate vrijednosti u target koloni: {unknown}")
+
+    # Kreiraj encoder sa ispravnim redoslijedom klasa: index 0 = Low, index 1 = High
+    # Ovo garantuje da inverse_transform([0]) = 'Low', inverse_transform([1]) = 'High'
     le = LabelEncoder()
-    y_encoded = le.fit_transform(y)
+    le.classes_ = np.array(['Low', 'High'])  # Eksplicitno: 0=Low, 1=High
+
+    print(f"Target encoding: {mapping}")
+    print(f"Encoder classes: {le.classes_}  (index 0 = Low, index 1 = High)")
+
     return y_encoded, le
 
 
@@ -109,10 +132,8 @@ def train_model():
     
     # Enkodiranje targeta - Encode target
     y_encoded, label_encoder = encode_target(y)
-    print(f"\nTarget mapping: Low -> 0, High -> 1")
     
-    # Podjela na train/test (80/20) - koristi random_state=0 kao u notebooku
-    # Split into train/test (80/20) - use random_state=0 as in notebook
+    # Podjela na train/test (80/20) - Split into train/test (80/20)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y_encoded, test_size=0.2, random_state=0, stratify=y_encoded
     )
@@ -129,21 +150,21 @@ def train_model():
     print("\nTreniranje Random Forest modela...")
     
     model = RandomForestClassifier(
-        n_estimators=100,       # broj stabala (100 je dobar balans)
-        max_depth=10,           # maksimalna dubina stabla (sprječava overfitting)
-        min_samples_split=5,    # minimalni uzorci za podjelu
-        min_samples_leaf=2,     # minimalni uzorci u listu
-        max_features='sqrt',    # broj feature-ova za svako stablo
-        random_state=42,        # za reprodukciju rezultata
-        n_jobs=-1,              # koristi sve dostupne procesore
-        verbose=1               # prikazuje progres
+        n_estimators=100,
+        max_depth=10,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        max_features='sqrt',
+        random_state=42,
+        n_jobs=-1,
+        verbose=1
     )
     
     model.fit(X_train, y_train)
     
     # Evaluacija - Evaluation
     y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
+    y_proba = model.predict_proba(X_test)[:, 1]  # index 1 = High rizik
     
     accuracy = accuracy_score(y_test, y_pred)
     auc = roc_auc_score(y_test, y_proba)
@@ -173,7 +194,7 @@ def train_model():
     print(f"\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=['Low', 'High']))
     
-    # Feature importance - Važnost feature-ova
+    # Feature importance
     feature_importance = pd.DataFrame({
         'feature': feature_cols,
         'importance': model.feature_importances_
@@ -209,13 +230,14 @@ def train_model():
         f.write(f"Version: 1.0\n")
         f.write(f"Trained: {pd.Timestamp.now()}\n")
         f.write(f"Samples: {len(X_train) + len(X_test)}\n")
+        f.write(f"Encoding: Low=0, High=1\n")
 
     print(f"\n{'='*60}")
     print("  MODEL SAVED")
     print('='*60)
     print("\nFiles saved in 'models/' directory:")
     print("  - rf_model.pkl          (Random Forest model)")
-    print("  - label_encoder_rf.pkl  (Label encoder for target)")
+    print("  - label_encoder_rf.pkl  (Label encoder: 0=Low, 1=High)")
     print("  - feature_cols_rf.pkl   (List of feature names)")
     
     print("\n" + "="*60)

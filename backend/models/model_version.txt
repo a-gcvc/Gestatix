@@ -1,0 +1,4 @@
+Version: 1.0
+Trained: 2026-05-15 21:41:26.241231
+Samples: 1140
+Encoding: Low=0, High=1

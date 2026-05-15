@@ -1,6 +1,10 @@
 """
 model_utils.py
 Pomocne funkcije za ucitavanje Random Forest modela i predikciju.
+
+Konvencija enkodiranja (mora biti konzistentna sa model_train_rf.py):
+    Low  → 0  (indeks 0 u predict_proba)
+    High → 1  (indeks 1 u predict_proba)
 """
 
 import joblib
@@ -13,19 +17,28 @@ _feature_cols = None
 
 
 def load_model_artifacts():
-    """Ucitava Random Forest model, label encoder i feature kolone. - load random forest model, label encoder and feature columns."""
+    """Ucitava Random Forest model, label encoder i feature kolone."""
     global _model, _label_encoder, _feature_cols
     
     if _model is None:
         _model = joblib.load('models/rf_model.pkl')
         _label_encoder = joblib.load('models/label_encoder_rf.pkl')
         _feature_cols = joblib.load('models/feature_cols_rf.pkl')
+
+        # Provjera ispravnosti encodera pri svakom učitavanju
+        classes = list(_label_encoder.classes_)
+        if classes != ['Low', 'High']:
+            raise ValueError(
+                f"Neispravan redoslijed klasa u encoderu: {classes}. "
+                f"Očekivano: ['Low', 'High'] (0=Low, 1=High). "
+                f"Pokreni model_train_rf.py da retrainiraš model."
+            )
     
     return _model, _label_encoder, _feature_cols
 
 
 def preprocess_input(data_dict):
-    """Pretvara input dictionary u DataFrame spreman za predikciju. - Convert input dictionary to DataFrame ready for prediction."""
+    """Pretvara input dictionary u DataFrame spreman za predikciju."""
     
     _, _, feature_cols = load_model_artifacts()
     
@@ -35,7 +48,7 @@ def preprocess_input(data_dict):
     
     input_df = pd.DataFrame([{col: data_dict.get(col) for col in feature_cols}])
     
-    # Konverzija temperature (Fahrenheit → Celsius) - Convert temperature (Fahrenheit → Celsius)
+    # Konverzija temperature ako je u Fahrenheit (vrijednost > 50 je signal)
     if 'tjelesna_temp' in input_df.columns:
         if input_df['tjelesna_temp'].iloc[0] > 50:
             input_df['tjelesna_temp'] = ((input_df['tjelesna_temp'] - 32) * 5/9).round(2)
@@ -47,24 +60,25 @@ def preprocess_input(data_dict):
 
 
 def predict_risk(data_dict):
-    """Vraca predikciju rizika za jedan unos. - Return risk prediction for a single input."""
+    """
+    Vraca predikciju rizika za jedan unos.
+
+    Enkodiranje: Low=0 (indeks 0), High=1 (indeks 1)
+    predict_proba vraca [P(Low), P(High)]
+    """
     model, label_encoder, _ = load_model_artifacts()
     
     input_df = preprocess_input(data_dict)
     
-    prediction = model.predict(input_df)[0]
-    probabilities = model.predict_proba(input_df)[0]
-    
-    # Label encoder ima: 0=High, 1=Low
-    if prediction == 0:
-        risk_label = 'High'
-        risk_code = 1
-    else:
-        risk_label = 'Low'
-        risk_code = 0
-    
-    high_prob = probabilities[0]
-    low_prob = probabilities[1]
+    prediction = model.predict(input_df)[0]          # 0=Low, 1=High
+    probabilities = model.predict_proba(input_df)[0]  # [P(Low), P(High)]
+
+    # Direktno mapiranje: 0=Low, 1=High
+    risk_label = 'Low' if prediction == 0 else 'High'
+    risk_code = int(prediction)  # 0 ili 1
+
+    low_prob  = float(probabilities[0])  # P(Low)
+    high_prob = float(probabilities[1])  # P(High)
     confidence = float(max(probabilities))
     
     result = {
@@ -72,12 +86,12 @@ def predict_risk(data_dict):
         'risk_code': risk_code,
         'confidence': confidence,
         'probabilities': {
-            'Low': float(low_prob),
-            'High': float(high_prob)
+            'Low': low_prob,
+            'High': high_prob
         }
     }
     
-    print(f"DEBUG predict_risk: {result}")  # Dodajte ovu liniju za debug
+    print(f"DEBUG predict_risk: {result}")
     return result
 
 
@@ -93,7 +107,7 @@ def predict_batch(data_list):
 
 
 def get_model_info():
-    """Vraca informacije o ucitanom modelu. - Return information about the loaded model."""
+    """Vraca informacije o ucitanom modelu."""
     model, label_encoder, feature_cols = load_model_artifacts()
     
     return {
@@ -102,5 +116,6 @@ def get_model_info():
         'max_depth': model.max_depth,
         'n_features': len(feature_cols),
         'feature_names': feature_cols,
-        'encoder_classes': list(label_encoder.classes_)  # ['High', 'Low']
+        'encoder_classes': list(label_encoder.classes_),  # ['Low', 'High']
+        'encoding': 'Low=0, High=1'
     }
