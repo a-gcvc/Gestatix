@@ -1,4 +1,3 @@
-/* style.css */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +13,6 @@ body {
     overflow-x: hidden;
 }
 
-/* ========== HERO SECTION ========== */
 .hero {
     position: relative;
     min-height: 100vh;
@@ -97,7 +95,6 @@ body {
     box-shadow: 0 12px 28px rgba(233,30,99,0.4);
 }
 
-/* Dodatno dugme - Kako Gestatix radi */
 .btn-how {
     background: transparent;
     border: 2px solid #e91e63;
@@ -118,7 +115,6 @@ body {
     transform: translateY(-3px);
 }
 
-/* Usklađena dugmad za rezultate */
 .results-header .btn-retrain,
 .results-header .btn-new {
     padding: 10px 24px;
@@ -159,7 +155,6 @@ body {
     transform: translateY(0);
 }
 
-/* Cvijeće u pozadini */
 .hero-flowers {
     position: absolute;
     top: 0;
@@ -211,14 +206,12 @@ body {
     }
 }
 
-/* ========== MAIN APP ========== */
 .container {
     max-width: 1300px;
     margin: 0 auto;
     padding: 2rem;
 }
 
-/* Header forme */
 .form-header {
     text-align: center;
     margin-bottom: 2rem;
@@ -257,7 +250,6 @@ body {
     color: #7a5d66;
 }
 
-/* Forma */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -331,7 +323,6 @@ body {
     min-height: 20px;
 }
 
-/* Dugmad */
 .form-actions {
     display: flex;
     justify-content: center;
@@ -339,7 +330,7 @@ body {
     margin-top: 1rem;
 }
 
-.btn-reset, .btn-submit, .btn-new {
+.btn-reset, .btn-submit {
     padding: 12px 28px;
     border-radius: 40px;
     font-weight: 600;
@@ -369,17 +360,7 @@ body {
     box-shadow: 0 6px 16px rgba(233,30,99,0.4);
 }
 
-.btn-new {
-    background: #e91e63;
-    color: white;
-    box-shadow: none;
-}
 
-.btn-new:hover {
-    background: #c2185b;
-}
-
-/* Rezultati */
 #results-section {
     margin-top: 2rem;
     animation: fadeIn 0.5s ease;
@@ -425,10 +406,6 @@ body {
     font-weight: 700;
 }
 
-.risk-confidence {
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
 
 .progress-bar-container {
     background: #ffe4ed;
@@ -445,7 +422,6 @@ body {
     transition: width 0.6s ease;
 }
 
-/* ========== CHARTS - RESponzivno ========== */
 .charts-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -473,7 +449,6 @@ body {
     font-size: 1.1rem;
 }
 
-/* Container za pie chart - RESPONZIVAN */
 #riskChart {
     width: 100% !important;
     height: auto !important;
@@ -483,7 +458,6 @@ body {
     display: block;
 }
 
-/* Centralni tekst na pie chart-u */
 .chart-card:first-child {
     position: relative;
 }
@@ -516,7 +490,6 @@ body {
     margin-top: 4px;
 }
 
-/* Feature Chart - RESPONZIVAN */
 #featureChart {
     width: 100% !important;
     height: auto !important;
@@ -524,7 +497,6 @@ body {
     max-height: 280px;
 }
 
-/* RAG sekcija */
 .rag-section {
     background: #fff0f3;
     border-radius: 28px;
@@ -583,7 +555,6 @@ body {
     text-decoration: underline;
 }
 
-/* Loading overlay */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -608,7 +579,6 @@ body {
     animation: spin 1s linear infinite;
 }
 
-/* Input number stilovi */
 input[type="number"] {
     -moz-appearance: textfield;
 }
@@ -619,14 +589,12 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: 0;
 }
 
-/* Indikacija da polje ima grešku */
 .input-group.error input,
 .input-group.error select {
     border-color: #e91e63;
     background-color: #fff0f3;
 }
 
-/* Footer */
 .footer {
     background: #2d1f24;
     color: #f8ced9;
@@ -658,7 +626,6 @@ input[type="number"]::-webkit-outer-spin-button {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== RESPONZIVNOST - MOBILNI UREĐAJI ========== */
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
@@ -737,31 +704,6 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 }
 
-/* Dugme za retraining */
-.btn-retrain {
-    background: #9c27b0;
-    color: white;
-    padding: 8px 20px;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-retrain:hover {
-    background: #7b1fa2;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(156,39,176,0.3);
-}
-
-.btn-retrain:active {
-    transform: translateY(0);
-}
 
 @media (max-width: 480px) {
     .chart-card {

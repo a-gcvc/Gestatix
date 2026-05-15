@@ -1,7 +1,7 @@
 // API base URL
 const API_BASE = 'http://127.0.0.1:5000';
 
-// DOM elementi
+// DOM elementi - Main DOM elements
 const heroSection = document.getElementById('hero-section');
 const appMain = document.getElementById('app-main');
 const startBtn = document.getElementById('start-journey-btn');
@@ -17,15 +17,12 @@ let riskChart = null;
 let featureChart = null;
 let lastPredictionData = null;
 
-// STAL stranica elementi
+// STAL stranica elementi - STAL page elements
 const stalSection = document.getElementById('stal-section');
 const howItWorksBtn = document.getElementById('how-it-works-btn');
 const backToHeroFromStal = document.getElementById('back-to-hero-from-stal');
 
-// Prikaz STAL stranice
-
-
-// Provjera API statusa pri pokretanju aplikacije
+// Provjera API statusa pri pokretanju aplikacije - Check API status on app startup
 async function checkAPIStatus() {
     try {
         const response = await fetch(`${API_BASE}/health`, {
@@ -51,21 +48,12 @@ async function checkAPIStatus() {
     }
 }
 
-// Pozovite na početku
-
-
-// Helper: Prikaz/ sakrivanje loadinga
+// Helper: Prikaz/ sakrivanje loadinga - Helper: Show/hide loading
 function showLoading(show) {
     loadingOverlay.style.display = show ? 'flex' : 'none';
 }
 
-// Funkcija za zamjenu zareza sa tačkama u numeričkim poljima
-function sanitizeNumericInput(value) {
-    if (typeof value !== 'string') return value;
-    return value.replace(',', '.');
-}
-
-// Dodaj event listenere za sva numerička polja da spriječe unos zareza
+// Dodaj event listenere za sva numerička polja da spriječe unos zareza i automatski ih zamijene tačkama - Add event listeners to all numeric fields to prevent comma input and automatically replace with dots
 function setupNumericInputValidation() {
     const numericInputs = ['dob', 'height', 'weight', 'systolic', 'diastolic', 'glucose', 'temperature', 'heart_rate'];
     
@@ -89,8 +77,6 @@ function setupNumericInputValidation() {
             
             input.addEventListener('keypress', function(e) {
             if (e.key === ',') {
-                // Ne spriječavamo default, već ćemo zamijeniti na input eventu
-                // Samo dozvoljavamo unos
                 return;
             }
         });
@@ -98,7 +84,7 @@ function setupNumericInputValidation() {
     });
 }
 
-// Sanitizacija podataka prije slanja
+// Sanitizacija podataka prije slanja - Sanitization of data before sending
 function sanitizeFormData() {
     const numericFields = ['dob', 'height', 'weight', 'systolic', 'diastolic', 'glucose', 'temperature', 'heart_rate'];
     
@@ -111,7 +97,7 @@ function sanitizeFormData() {
     });
 }
 
-// Validacija forme prije slanja - BOSANSKI JEZIK
+// Validacija forme prije slanja - BOSANSKI JEZIK - Form validation before submission - IN BOSNIAN LANGUAGE
 function validateForm() {
     let isValid = true;
     sanitizeFormData();
@@ -191,7 +177,7 @@ function validateForm() {
         }
     };
     
-    // Validacija brojčanih polja
+    // Validacija brojčanih polja - Validation of numeric fields
     for (let [key, f] of Object.entries(fields)) {
         if (!f.element) continue;
         
@@ -231,7 +217,7 @@ function validateForm() {
         }
     }
     
-    // Validacija select polja
+    // Validacija select polja - Validation of select fields
     const selects = [
         { id: 'complications', name: 'Komplikacije u prošlim trudnoćama' },
         { id: 'diabetes', name: 'Dijabetes' },
@@ -259,13 +245,13 @@ function validateForm() {
     return isValid;
 }
 
-// Izračunaj BMI
+// Izračunaj BMI na osnovu visine i težine - Calculate BMI based on height and weight
 function calculateBMI(heightCm, weightKg) {
     const heightM = heightCm / 100;
     return weightKg / (heightM * heightM);
 }
 
-// Prikupljanje podataka iz forme
+// Prikupljanje podataka iz forme - Collecting data from the form
 function getFormData() {
     const height = parseFloat(document.getElementById('height').value);
     const weight = parseFloat(document.getElementById('weight').value);
@@ -289,7 +275,7 @@ function getFormData() {
         return Math.round(parseNumericValue(id, defaultValue));
     }
     
-    // Dohvati select vrijednosti
+    // Dohvati select vrijednosti - Get select values
     const complications = document.getElementById('complications').value;
     const diabetes = document.getElementById('diabetes').value;
     const gdm = document.getElementById('gdm').value;
@@ -309,10 +295,10 @@ function getFormData() {
         otkucaji_srca: parseIntValue('heart_rate')
     };
     
-    // Provjeri da li su svi podaci validni
+    // Provjeri da li su svi podaci validni prije slanja - Check if all data is valid before sending
     console.log('Podaci za slanje (prije slanja):', JSON.stringify(data, null, 2));
     
-    // Validacija da nema undefined ili NaN
+    // Validacija da nema undefined ili NaN vrijednosti - Validation to ensure no undefined or NaN values
     for (let [key, value] of Object.entries(data)) {
         if (value === undefined || isNaN(value)) {
             console.error(`Greška: ${key} je ${value}`);
@@ -322,11 +308,11 @@ function getFormData() {
     return data;
 }
 
-// Prikaz rezultata i grafika
+// Prikaz rezultata i grafika - Display results and charts
 async function displayResults(riskData, ragText, inputData) {
     console.log('Prikazujem rezultate:', riskData);
     
-    // Sačuvaj podatke za feedback
+    // Sačuvaj podatke za feedback ako su dostupni - Save data for feedback if available
     if (inputData) {
         saveLastPrediction(riskData, inputData);
     }
@@ -336,14 +322,14 @@ async function displayResults(riskData, ragText, inputData) {
     const lowProb = (riskData.probabilities.Low * 100).toFixed(1);
     const highProb = (riskData.probabilities.High * 100).toFixed(1);
     
-    // Elementi za prikaz rizika
+    // Elementi za prikaz rizika i confidence bar - Elements for displaying risk and confidence bar
     const riskCard = document.getElementById('risk-card');
     const riskIcon = document.getElementById('risk-icon');
     const riskTextSpan = document.getElementById('risk-text');
     const confidenceSpan = document.getElementById('confidence-value');
     const confidenceBar = document.getElementById('confidence-bar');
     
-    // DODATAK: Element za preporuku akcije (kreiraj ako ne postoji)
+    // Element za preporuku akcije (kreiraj ako ne postoji) - Element for action recommendation (create if it doesn't exist)
     let actionRecommendation = document.getElementById('action-recommendation');
     if (!actionRecommendation && riskCard) {
         actionRecommendation = document.createElement('div');
@@ -364,7 +350,7 @@ async function displayResults(riskData, ragText, inputData) {
         }
         if (riskTextSpan) riskTextSpan.innerHTML = `Nivo rizika: <strong style="color:#e91e63">VISOK RIZIK</strong>`;
         
-        // DODATAK: Preporuka za VISOK rizik - JAVITI SE LJEKARU
+        // Preporuka za VISOK rizik - JAVITI SE LJEKARU - Recommendation for HIGH risk - SEE A DOCTOR
         if (actionRecommendation) {
             actionRecommendation.style.background = '#ffebee';
             actionRecommendation.style.borderLeft = '4px solid #e91e63';
@@ -387,7 +373,7 @@ async function displayResults(riskData, ragText, inputData) {
         }
         if (riskTextSpan) riskTextSpan.innerHTML = `Nivo rizika: <strong style="color:#2e7d32">NIZAK RIZIK</strong>`;
         
-        // DODATAK: Preporuka za NIZAK rizik
+        // Preporuka za NIZAK rizik - NASTAVITE SA REDOVNIM PREGLEDIMA - Recommendation for LOW risk - CONTINUE REGULAR CHECK-UPS
         if (actionRecommendation) {
             actionRecommendation.style.background = '#e8f5e9';
             actionRecommendation.style.borderLeft = '4px solid #4caf50';
@@ -407,7 +393,7 @@ async function displayResults(riskData, ragText, inputData) {
     if (confidenceBar) confidenceBar.style.width = `${confidence}%`;
     
     // ============================================================
-    // PIE CHART sa procentima i responzivnošću
+    // PIE CHART sa procentima i responzivnošću - PIE CHART with percentages and responsiveness
     // ============================================================
     
     const isMobile = window.innerWidth < 768;
@@ -456,11 +442,11 @@ async function displayResults(riskData, ragText, inputData) {
         });
     }
     
-    // DODATAK: Centralni tekst sa procentima (RESPONZIVNO - POPRAVLJENO)
+    // Centralni tekst sa procentima i dominantnim rizikom - Central text with percentages and dominant risk
     const chartContainer = document.getElementById('riskChart').parentElement;
     let centerText = document.getElementById('chart-center-text');
     
-    // Ukloni postojeći tekst ako postoji da se ne duplira
+    // Ukloni postojeći tekst ako postoji da se ne duplira - Remove existing text if it exists to avoid duplication
     if (centerText && centerText.parentNode) {
         centerText.remove();
     }
@@ -502,7 +488,7 @@ async function displayResults(riskData, ragText, inputData) {
     }
     
     // ============================================================
-    // BAR CHART - Feature Importance
+    // BAR CHART - Feature Importance - BAR CHART - Feature Importance
     // ============================================================
     
     let featureData;
@@ -517,7 +503,7 @@ async function displayResults(riskData, ragText, inputData) {
         };
     }
     
-    // Mapa za prikaz imena na bosanskom
+    // Mapa za prikaz imena na bosanskom jeziku - Map for displaying names in Bosnian language
     const featureNamesMap = {
         'dijabetes': 'Dijagnoza dijabetesa',
         'glukoza_u_krvi': 'Glukoza u krvi',
@@ -582,14 +568,14 @@ async function displayResults(riskData, ragText, inputData) {
         });
     }
     
-    // RAG preporuke
+    // RAG preporuke - RAG recommendations
     const ragDiv = document.getElementById('rag-recommendations');
     if (ragDiv) {
         ragDiv.innerHTML = ragText ? ragText.replace(/\n/g, '<br>') : '<p>Nema dodatnih preporuka za prikaz.</p>';
     }
 }
 
-// Dodaj event listener za resize prozora da se chart prilagodi (dodajte na kraj script.js)
+// Dodaj event listener za resize prozora da se chart prilagodi (dodajte na kraj script.js) - Add event listener for window resize to adjust the chart (add at the end of script.js)
 window.addEventListener('resize', function() {
     if (riskChart) {
         const isMobile = window.innerWidth < 768;
@@ -599,7 +585,7 @@ window.addEventListener('resize', function() {
         riskChart.update();
     }
     
-    // Ažuriraj centralni tekst na pie chart-u
+    // Ažuriraj centralni tekst na pie chart-u - Update central text on pie chart
     const centerTextElem = document.getElementById('chart-center-text');
     if (centerTextElem) {
         const isMobileResize = window.innerWidth < 768;
@@ -617,7 +603,7 @@ window.addEventListener('resize', function() {
         if (subtitleDiv) subtitleDiv.style.fontSize = subFontSize;
     }
     
-    // Ažuriraj bar chart
+    // Ažuriraj bar chart - Update bar chart
     if (featureChart) {
         const isMobileResize = window.innerWidth < 768;
         featureChart.config.options.scales.x.ticks.rotation = isMobileResize ? 25 : 0;
@@ -626,38 +612,7 @@ window.addEventListener('resize', function() {
     }
 });
 
-// Dodaj event listener za resize prozora da se chart prilagodi
-window.addEventListener('resize', function() {
-    if (riskChart) {
-        const isMobile = window.innerWidth < 768;
-        riskChart.config.options.cutout = isMobile ? '60%' : '65%';
-        riskChart.config.options.plugins.legend.labels.font.size = isMobile ? 10 : 12;
-        riskChart.config.options.plugins.legend.labels.padding = isMobile ? 10 : 15;
-        riskChart.update();
-    }
-    
-    // Ažuriraj centralni tekst na pie chart-u
-    const centerTextElem = document.getElementById('chart-center-text');
-    if (centerTextElem) {
-        const isMobileResize = window.innerWidth < 768;
-        const fontSize = isMobileResize ? '1.2rem' : '1.8rem';
-        const subFontSize = isMobileResize ? '0.65rem' : '0.75rem';
-        const titleDiv = centerTextElem.querySelector('div:first-child');
-        const subtitleDiv = centerTextElem.querySelector('div:last-child');
-        if (titleDiv) titleDiv.style.fontSize = fontSize;
-        if (subtitleDiv) subtitleDiv.style.fontSize = subFontSize;
-    }
-    
-    // Ažuriraj bar chart
-    if (featureChart) {
-        const isMobileResize = window.innerWidth < 768;
-        featureChart.config.options.scales.x.ticks.rotation = isMobileResize ? 25 : 0;
-        featureChart.config.options.scales.x.ticks.font.size = isMobileResize ? 9 : 10;
-        featureChart.update();
-    }
-});
-
-// Sačuvaj zadnju predikciju za feedback
+// Sačuvaj zadnju predikciju za feedback - Save last prediction for feedback
 function saveLastPrediction(riskData, inputData) {
     lastPredictionData = {
         risk_level: riskData.risk_level,
@@ -667,7 +622,7 @@ function saveLastPrediction(riskData, inputData) {
     localStorage.setItem('lastPrediction', JSON.stringify(lastPredictionData));
 }
 
-// Slanje feedback-a na backend
+// Slanje feedback-a na backend - Send feedback to backend
 async function sendFeedback(userAgrees, correctRisk = null) {
     console.log('sendFeedback pozvana, userAgrees:', userAgrees);
     
@@ -714,7 +669,7 @@ async function sendFeedback(userAgrees, correctRisk = null) {
             messageDiv.style.color = '#e91e63';
         }
         
-        // SAMO SAKRIJ PORUKU NAKON 5 SEKUNDI, NE RESETUJ FORMU!
+        // SAMO SAKRIJ PORUKU NAKON 5 SEKUNDI, NE RESETUJ FORMU! - ONLY HIDE THE MESSAGE AFTER 5 SECONDS, DO NOT RESET THE FORM!
         setTimeout(() => {
             messageDiv.style.display = 'none';
         }, 5000);
@@ -730,7 +685,7 @@ async function sendFeedback(userAgrees, correctRisk = null) {
     }
 }
 
-// Učitaj statistiku feedback sistema
+// Učitaj statistiku feedback sistema - Load feedback system statistics
 async function loadFeedbackStats() {
     try {
         const response = await fetch(`${API_BASE}/feedback/stats`);
@@ -749,31 +704,10 @@ async function loadFeedbackStats() {
     }
 }
 
-// Ručno pokreni retraining
-async function triggerRetraining() {
-    try {
-        const response = await fetch(`${API_BASE}/feedback/retrain`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ force: true })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert(`Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
-            loadFeedbackStats();
-        } else {
-            alert(`${result.message}`);
-        }
-    } catch (err) {
-        console.error('Retraining greška:', err);
-        alert('Greška pri retraining-u modela.');
-    }
-}
+
 
 async function submitAssessment(event) {
-    // 1. Primarna zaštita od osvježavanja stranice i duplih okidanja
+    // 1. Primarna zaštita od osvježavanja stranice i duplih okidanja - Primary protection against page refresh and double triggers
     if (event) {
         event.preventDefault();
         event.stopPropagation(); 
@@ -781,23 +715,22 @@ async function submitAssessment(event) {
 
     console.log('submitAssessment pozvana');
     
-    // Resetuj prethodne greške u UI-u ako postoje
+    // Resetuj prethodne greške u UI-u ako postoje - Reset previous errors in the UI if they exist
     const existingErr = document.getElementById('api-error-banner');
     if (existingErr) existingErr.remove();
 
-    // 2. Provjera validacije
+    // 2. Provjera validacije formi prije slanja - Check form validation before submission
     if (!validateForm()) {
         console.log('Validacija nije prošla');
         return;
     }
     
-    // Prikaži loading animaciju
-    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+    // Prikaži loading animaciju - Show loading animation
     showLoading(true);
 
     const payload = getFormData();
     
-    // Provjera integriteta podataka (Missing fields check)
+    // Provjera integriteta podataka (Missing fields check) - Data integrity check (Missing fields check)
     const requiredFields = ['dob', 'sistolicki_krvni_tlak', 'dijastolicki_krvni_tlak', 
                             'glukoza_u_krvi', 'tjelesna_temp', 'BMI', 'otkucaji_srca'];
     
@@ -806,7 +739,6 @@ async function submitAssessment(event) {
         console.error('Nedostaju polja:', missing);
         alert(`Molimo popunite sva polja: ${missing.join(', ')}`);
         showLoading(false);
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
         return;
     }
     
@@ -841,14 +773,14 @@ async function submitAssessment(event) {
             throw new Error('Neispravan odgovor servera: nedostaje objekat rizika');
         }
         
-        // 3. KLJUČNI DIO: Sigurna navigacija na rezultate
-        // Sakrivamo SVE što bi moglo smetati
+        // 3. KLJUČNI DIO: Sigurna navigacija na rezultate - KEY PART: Safe navigation to results
+        // Sakrivamo SVE što bi moglo smetati - Hide ALL that could interfere
         heroSection.style.display = 'none';
-        stalSection.style.display = 'none'; // Osiguranje ako je korisnik došao sa "Kako radi"
+        stalSection.style.display = 'none'; // Osiguranje ako je korisnik došao sa "Kako radi" - Ensure if user came from "How it works" section
         
-        // Prikazujemo glavni kontejner i sekciju rezultata
+        // Prikazujemo glavni kontejner i sekciju rezultata - Show main container and results section
         appMain.style.display = 'block';
-        form.style.display = 'none'; // Sakrij formu unutar appMain
+        form.style.display = 'none'; // Sakrij formu unutar appMain da ne ostane prazna sekcija
         resultsSection.style.display = 'block';
         
         try {
@@ -863,7 +795,7 @@ async function submitAssessment(event) {
             resultsSection.prepend(errDiv);
         }
         
-        // Skroluj na vrh da korisnik vidi nivo rizika
+        // Skroluj na vrh da korisnik vidi nivo rizika - Scroll to top so user sees the risk level
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
     } catch (err) {
@@ -873,7 +805,7 @@ async function submitAssessment(event) {
             ? 'Server nije dostupan. Proverite da li je Python backend pokrenut.'
             : err.message;
         
-        // U slučaju greške, vrati korisnika na formu da može probati opet
+        // U slučaju greške, vrati korisnika na formu da može probati opet - In case of error, return user to the form so they can try again
         heroSection.style.display = 'none';
         appMain.style.display = 'block';
         form.style.display = 'block';
@@ -886,13 +818,12 @@ async function submitAssessment(event) {
         form.after(errDiv);
         
     } finally {
-        // Obavezno sakrij loading bez obzira na ishod
+        // Obavezno sakrij loading bez obzira na ishod - Always hide loading regardless of outcome
         showLoading(false);
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
 }
 
-// Reset forme i povratak na formu
+// Reset forme i povratak na formu nakon pregleda rezultata - Reset form and return to form after viewing results
 function resetAndShowForm() {
     heroSection.style.display = 'none';
     appMain.style.display = 'block';
@@ -904,7 +835,7 @@ function resetAndShowForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Učitaj stvarnu feature importance iz modela
+// Učitaj stvarnu feature importance iz modela - Load actual feature importance from the model
 async function loadFeatureImportance() {
     try {
         const response = await fetch(`${API_BASE}/model/features`);
@@ -916,7 +847,7 @@ async function loadFeatureImportance() {
     } catch (err) {
         console.warn('Nije moguće učitati feature importance:', err);
     }
-    // Fallback vrijednosti ako API ne radi
+    // Fallback vrijednosti ako API ne radi - Fallback values if API fails
     console.log('Koristim fallback vrijednosti za feature importance');
     return {
         labels: ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
@@ -929,7 +860,7 @@ async function loadFeatureImportance() {
 // SENSE - THINK - ACT - LEARN CIKLUS
 // ============================================================
 
-// Opisi za svaku fazu
+// Opisi za svaku fazu - Descriptions for each phase
 const cycleDescriptions = {
     sense: {
         title: "SENSE - Prikupljanje podataka",
@@ -943,7 +874,7 @@ const cycleDescriptions = {
         ]
     },
     think: {
-        title: "HINK - Analiza i predikcija",
+        title: "THINK - Analiza i predikcija",
         icon: "fa-brain",
         description: "Random Forest model (100 stabala, max depth 10) analizira prikupljene podatke i predviđa nivo rizika. Model je treniran na 1140 primjera sa 11 karakteristika, sa tačnošću od 97.8%.",
         details: [
@@ -977,7 +908,7 @@ const cycleDescriptions = {
     }
 };
 
-// Prikaz statusa retraining-a
+// Prikaz statusa retraining-a - Display retraining status
 function showRetrainingStatus(show, message = '') {
     const statusDiv = document.getElementById('retraining-status');
     const messageSpan = document.getElementById('retraining-message');
@@ -991,7 +922,7 @@ function showRetrainingStatus(show, message = '') {
     }
 }
 
-// Praćenje broja feedbackova i provjera da li je potreban retraining
+// Praćenje broja feedbackova i provjera da li je potreban retraining - Monitor feedback count and check if retraining is needed
 async function checkAndNotifyRetraining() {
     try {
         const response = await fetch(`${API_BASE}/feedback/stats`);
@@ -1008,13 +939,13 @@ async function checkAndNotifyRetraining() {
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem;">
                         <span><i class="fas fa-comments"></i> Feedback: ${stats.total_feedback}</span>
                         <span><i class="fas fa-check-circle"></i> Tačnih: ${stats.agreed_with_model}</span>
-                        <span><i class="fas fa-times-circle"></i> Netočnih: ${stats.disagreed_with_model}</span>
+                        <span><i class="fas fa-times-circle"></i> Netačnih: ${stats.disagreed_with_model}</span>
                         <span><i class="fas fa-sync-alt"></i> Nova za učenje: ${newSamples}/${threshold}</span>
                     </div>
                 `;
             }
             
-            // Ako je potreban retraining, pitaj korisnika
+            // Ako je potreban retraining, pitaj korisnika - If retraining is needed, ask the user
             if (needsRetraining && newSamples >= threshold) {
                 const userConfirmed = confirm(`📊 Poboljšanje modela\n\nPrikupljeno je ${newSamples} novih primjera za učenje.\n\nŽelite li poboljšati model sada?`);
                 if (userConfirmed) {
@@ -1026,15 +957,15 @@ async function checkAndNotifyRetraining() {
         console.warn('Nije moguće provjeriti status retraining-a:', err);
     }
 }
-// Dugme za retraining
+// Dugme za retraining - Button for retraining
 document.getElementById('retrain-btn')?.addEventListener('click', triggerRetraining);
 
-// Redovna provjera da li je potreban retraining
+// Redovna provjera da li je potreban retraining - Regular check if retraining is needed
 setInterval(() => {
     checkAndNotifyRetraining();
-}, 30000); // svakih 30 sekundi
+}, 30000); // svakih 30 sekundi 
 
-// Ručno pokreni retraining (poboljšana verzija)
+// Ručno pokreni retraining - Manually trigger retraining
 async function triggerRetraining() {
     showRetrainingStatus(true, 'Pokrećem poboljšanje modela... Molimo sačekajte.');
     
@@ -1048,24 +979,24 @@ async function triggerRetraining() {
         const result = await response.json();
         
         if (result.success) {
-            showRetrainingStatus(true, `✅ Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
+            showRetrainingStatus(true, `Retraining uspješan! Novi accuracy: ${(result.accuracy * 100).toFixed(2)}%`);
             
-            // Sakrij poruku nakon 5 sekundi
+            // Sakrij poruku nakon 5 sekundi - Hide message after 5 seconds
             setTimeout(() => {
                 showRetrainingStatus(false);
             }, 5000);
             
-            // Osveži statistiku
+            // Osvježi statistiku - Refresh statistics
             await loadFeedbackStats();
             await loadStalStats();
             
-            alert(`✅ Model je uspješno poboljšan!\n\nNovi accuracy: ${(result.accuracy * 100).toFixed(2)}%\nKorišteno: ${result.total_samples} primjera (${result.feedback_samples} feedbackova)`);
+            alert(`Model je uspješno poboljšan!\n\nNovi accuracy: ${(result.accuracy * 100).toFixed(2)}%\nKorišteno: ${result.total_samples} primjera (${result.feedback_samples} feedbackova)`);
         } else {
             showRetrainingStatus(true, `⚠️ ${result.message}`);
             setTimeout(() => {
                 showRetrainingStatus(false);
             }, 3000);
-            alert(`⚠️ ${result.message}`);
+            alert(`${result.message}`);
         }
     } catch (err) {
         console.error('Retraining greška:', err);
@@ -1077,23 +1008,23 @@ async function triggerRetraining() {
     }
 }
 
-// Inicijalizacija STAL ciklusa
+// Inicijalizacija STAL ciklusa - Initialization of the STAL cycle
 function initStalCycle() {
     const steps = document.querySelectorAll('.cycle-step');
     const descriptionDiv = document.getElementById('cycle-description');
     
     if (!steps.length || !descriptionDiv) return;
     
-    // Postavi default opis (Sense)
+    // Postavi default opis (Sense) - Set default description (Sense)
     updateCycleDescription('sense');
     
-    // Dodaj event listenere za svaki korak
+    // Dodaj event listenere za svaki korak - Add event listeners for each step
     steps.forEach(step => {
         step.addEventListener('click', function() {
             const stepName = this.getAttribute('data-step');
             updateCycleDescription(stepName);
             
-            // Vizuelno označi aktivni korak
+            // Vizuelno označi aktivni korak - Visually highlight the active step
             steps.forEach(s => s.style.background = '#ffe0e8');
             this.style.background = '#f0629240';
             this.style.transform = 'scale(1.02)';
@@ -1103,7 +1034,7 @@ function initStalCycle() {
             }, 200);
         });
         
-        // Hover efekat
+        // Hover efekat - Hover effect
         step.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-3px)';
             this.style.transition = 'all 0.2s ease';
@@ -1114,7 +1045,7 @@ function initStalCycle() {
     });
 }
 
-// Ažuriraj prikaz opisa za odabranu fazu
+// Ažuriraj prikaz opisa za odabranu fazu - Update the description display for the selected phase
 function updateCycleDescription(stepName) {
     const desc = cycleDescriptions[stepName];
     const descriptionDiv = document.getElementById('cycle-description');
@@ -1139,7 +1070,7 @@ function updateCycleDescription(stepName) {
     `;
 }
 
-// Dodaj STAL statistiku (broj feedbackova, verzija modela, itd.)
+// Dodaj STAL statistiku (broj feedbackova, verzija modela, itd.) - Add STAL statistics (number of feedbacks, model version, etc.)
 async function loadStalStats() {
     try {
         const response = await fetch(`${API_BASE}/feedback/stats`);
@@ -1163,32 +1094,32 @@ async function loadStalStats() {
 }
 
 // ============================================================
-// INICIJALIZACIJA — svi event listeneri registrovani JEDNOM,
-// unutar DOMContentLoaded kako bi DOM bio siguran dostupan
+// INICIJALIZACIJA — svi event listeneri registrovani JEDNOM, unutar DOMContentLoaded kako bi DOM bio siguran dostupan 
+// INITIALIZATION — all event listeners registered ONCE, within DOMContentLoaded to ensure DOM is safely accessible
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // 1. Inicijalni prikaz — forma vidljiva, rezultati skriveni
+    // 1. Inicijalni prikaz — forma vidljiva, rezultati skriveni - Initial display — form visible, results hidden
     form.style.display = 'block';
     resultsSection.style.display = 'none';
 
-    // 2. Provjera API statusa i učitavanje statistike
+    // 2. Provjera API statusa i učitavanje statistike feedback sistema - Check API status and load feedback system statistics
     checkAPIStatus();
     setupNumericInputValidation();
     loadFeedbackStats();
 
     console.log('App inicijalizovan!');
 
-    // 3. Forma — jedinstven submit listener, sprječava page reload
-    form.onsubmit = null; // ukloni eventualne inline handlere
+    // 3. Forma — jedinstven submit listener, sprječava page reload i duplu obradu - Form — single submit listener, prevents page reload and double processing
+    form.onsubmit = null; // ukloni eventualne inline handlere - remove any inline handlers
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         e.stopPropagation();
         submitAssessment();
     });
 
-    // Reset dugme na formi
+    // Reset dugme na formi - Reset button on the form - dodaj event listener da očisti greške - add event listener to clear errors
     form.addEventListener('reset', function() {
         setTimeout(() => {
             document.querySelectorAll('.error-message')
@@ -1196,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     });
 
-    // 4. Navigacija — "Započni putovanje"
+    // 4. Navigacija — "Započni putovanje" (STAL) - Navigation — "Start the journey" (STAL)
     startBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         heroSection.style.display = 'none';
@@ -1204,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // 5. Navigacija — "Kako Gestatix radi?" (STAL)
+    // 5. Navigacija — "Kako Gestatix radi?" (STAL) - Navigation — "How does Gestatix work?" (STAL)
     howItWorksBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1215,22 +1146,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadStalStats();
     });
 
-    // 6. Povratak na početnu sa forme
+    // 6. Povratak na početnu sa forme rezultata - Return to home from results form
     backBtn?.addEventListener('click', () => {
         appMain.style.display = 'none';
         heroSection.style.display = 'flex';
     });
 
-    // 7. Povratak na početnu sa STAL stranice
+    // 7. Povratak na početnu sa STAL stranice - Return to home from STAL page
     backToHeroFromStal?.addEventListener('click', () => {
         stalSection.style.display = 'none';
         heroSection.style.display = 'flex';
     });
 
-    // 8. Nova procjena
+    // 8. Nova procjena - Reset forme i povratak na formu nakon pregleda rezultata - New assessment - Reset form and return to form after viewing results
     newAssessmentBtn?.addEventListener('click', resetAndShowForm);
 
-    // 9. Toggle RAG preporuke
+    // 9. Toggle RAG preporuke - Toggle RAG recommendations
     toggleRagBtn?.addEventListener('click', () => {
         const isHidden = ragContent.style.display === 'none';
         ragContent.style.display = isHidden ? 'block' : 'none';
@@ -1239,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : '<i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča';
     });
 
-    // 10. Feedback dugmad
+    // 10. Feedback dugmad - Feedback buttons
     document.getElementById('feedback-yes')?.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();

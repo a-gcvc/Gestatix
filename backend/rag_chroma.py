@@ -1,6 +1,5 @@
 """
-rag_chroma.py - POBOLJŠANA VERZIJA
-Sa boljom relevantnošću pretrage
+rag_chroma.py
 """
 
 import os
@@ -31,11 +30,10 @@ CHROMA_PERSIST_DIR = "chroma_db"
 COLLECTION_NAME = "pregnancy_advice_bhs"
 EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
-# POBOLJŠANJE 1: Povećani broj rezultata za bolje filtriranje
-DEFAULT_N_RESULTS = 8  # Povećano sa 5 na 8
-MIN_RELEVANCE_THRESHOLD = 0.45  # Povećano sa 0.35 na 0.45 (samo kvalitetniji rezultati)
+DEFAULT_N_RESULTS = 8
+MIN_RELEVANCE_THRESHOLD = 0.45 
 
-# POBOLJŠANJE 2: Informacije o vodiču
+# Informacije o vodiču
 GUIDE_INFO = {
     'title': 'Klinički vodič za antenatalnu zaštitu',
     'year': '2021',
@@ -66,7 +64,7 @@ def get_chroma_client():
 
 
 def get_collection():
-    """Dohvata ili kreira Chroma kolekciju."""
+    """Dohvata ili kreira Chroma kolekciju. - Retrieves or creates Chroma collection."""
     global _collection
     if _collection is None:
         client = get_chroma_client()
@@ -87,7 +85,7 @@ def get_collection():
 
 
 def delete_collection():
-    """Briše postojeću kolekciju."""
+    """Briše postojeću kolekciju. - Deletes existing collection."""
     global _collection
     try:
         client = get_chroma_client()
@@ -99,7 +97,7 @@ def delete_collection():
 
 
 def _chroma_embedding_function(texts: List[str]) -> List[List[float]]:
-    """Embedding funkcija za Chroma."""
+    """Embedding funkcija za Chroma. - Embedding function for Chroma."""
     model = get_embedding_model()
     embeddings = model.encode(texts, convert_to_numpy=True)
     return embeddings.tolist()
@@ -107,8 +105,8 @@ def _chroma_embedding_function(texts: List[str]) -> List[List[float]]:
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 80) -> List[str]:
     """
-    POBOLJŠANO: Dijeli tekst na fragmente sa manjim preklapanjem.
-    Manji chunkovi = preciznija pretraga.
+    Dijeli tekst na fragmente sa manjim preklapanjem. - Splits text into chunks with smaller overlap.
+    Manji chunkovi = preciznija pretraga. - Smaller chunks = more precise search.
     """
     if not text or len(text) < chunk_size:
         return [text] if text else []
@@ -120,7 +118,7 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 80) -> List[str]
     while start < text_length:
         end = min(start + chunk_size, text_length)
         
-        # Pokušaj završiti na kraju rečenice
+        # Pokušaj završiti na kraju rečenice - try to end at sentence boundary
         if end < text_length:
             for sep in ['. ', '? ', '! ', '\n\n', '\n', '; ', ': ']:
                 last_sep = text.rfind(sep, start, end)
@@ -129,7 +127,7 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 80) -> List[str]
                     break
         
         chunk = text[start:end].strip()
-        if chunk and len(chunk) > 50:  # Odbaci prekratke chunkove
+        if chunk and len(chunk) > 50:  # Odbaci prekratke chunkove - discard too short chunks
             chunks.append(chunk)
         
         start = max(start + 1, end - overlap)
@@ -138,7 +136,7 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 80) -> List[str]
 
 
 def load_pdf_to_chunks(pdf_path: str) -> List[Dict[str, Any]]:
-    """Učitava PDF i dijeli ga na fragmentove."""
+    """Učitava PDF i dijeli ga na fragmentove. - Loads PDF and splits it into chunks."""
     try:
         from PyPDF2 import PdfReader
     except ImportError:
@@ -178,7 +176,7 @@ def load_pdf_to_chunks(pdf_path: str) -> List[Dict[str, Any]]:
 
 
 def build_vector_store_from_pdf(pdf_path: str, force_rebuild: bool = False):
-    """Gradi vektorsku bazu iz PDF dokumenta."""
+    """Gradi vektorsku bazu iz PDF dokumenta. - Builds vector store from PDF document."""
     if force_rebuild:
         delete_collection()
     
@@ -223,7 +221,7 @@ def build_vector_store_from_pdf(pdf_path: str, force_rebuild: bool = False):
 
 def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict[str, Any]]:
     """
-    POBOLJŠANO: Semantička pretraga sa filtriranjem po relevantnosti.
+    Semantička pretraga sa filtriranjem po relevantnosti. - Semantic search with relevance filtering.
     """
     collection = get_collection()
     
@@ -248,7 +246,7 @@ def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict
             
             relevance_score = 1 - distance if distance else 0
             
-            # POBOLJŠANJE: Filtriraj samo rezultate iznad praga
+            # Filtriraj samo rezultate iznad praga - filter only results above threshold
             if relevance_score >= MIN_RELEVANCE_THRESHOLD:
                 formatted_results.append({
                     'text': doc,
@@ -264,7 +262,7 @@ def get_guide_header(risk_level: str = "Low") -> str:
     
     guide_text = ""
     
-    # ISPRAVKA: Provjeri da li je risk_level string ili nešto drugo
+    # Provjeri da li je risk_level string ili nešto drugo - Check if risk_level is a string or something else
     if "High" in str(risk_level) or "VISOK" in str(risk_level).upper():
         guide_text += "VISOK RIZIK - Preporuke za hitnu intervenciju:\n\n"
     else:
@@ -276,17 +274,17 @@ def get_relevant_advice_rag(query_context: str, patient_data: dict, n_results: i
     
     query = build_semantic_query_bhs(patient_data, query_context)
     
-    # Povećan broj rezultata za bolju selekciju
+    # Povećan broj rezultata za bolju selekciju - Increased number of results for better selection
     results = semantic_search(query, n_results=DEFAULT_N_RESULTS)
     
     if not results:
         return "Trenutno nema specifičnih preporuka za vaše parametre. Savjetujemo konsultaciju s ljekarom."
     
-    # Uvodna rečenica o vodiču
+    # Uvodna rečenica o vodiču i riziku - Intro sentence about the guide and risk
     risk_level = query_context if "rizik" in query_context.lower() else "Low"
     advice_parts = [get_guide_header(risk_level)]
     
-    # Dodaj relevantne preporuke
+    # Dodaj relevantne preporuke - Add relevant recommendations
     added_count = 0
     for i, result in enumerate(results[:n_results], 1):
         if result['relevance_score'] >= MIN_RELEVANCE_THRESHOLD:
@@ -296,7 +294,7 @@ def get_relevant_advice_rag(query_context: str, patient_data: dict, n_results: i
             added_count += 1
     
     if added_count == 0:
-        # Ako nema dovoljno kvalitetnih rezultata, smanji prag
+        # Ako nema dovoljno kvalitetnih rezultata, smanji prag - If there are not enough high-quality results, lower the threshold
         advice_parts = [get_guide_header(risk_level)]
         for i, result in enumerate(results[:3], 1):
             advice_parts.append(f"**Preporuka {i}:**")
@@ -308,12 +306,12 @@ def get_relevant_advice_rag(query_context: str, patient_data: dict, n_results: i
 
 def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
     """
-    POBOLJŠANO: Grafi bolji semantički upit.
+    Grafi bolji semantički upit.
     Dodaje težinske faktore za važnije parametre.
     """
     query_parts = []
     
-    # Dijabetes i glukoza (najveća težina)
+    # Dijabetes i glukoza (najveća težina) - Diabetes and glucose (highest weight)
     glucose = patient_data.get('glukoza_u_krvi', 0)
     diabetes = patient_data.get('dijabetes', 0)
     gdm = patient_data.get('gestacijski_dijabetes', 0)
@@ -329,7 +327,7 @@ def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
         if gdm == 1:
             query_parts.append("gestacijski dijabetes ishrana inzulin")
     
-    # Krvni pritisak (srednja težina)
+    # Krvni pritisak (srednja težina) - Blood pressure (medium weight)
     systolic = patient_data.get('sistolicki_krvni_tlak', 0)
     diastolic = patient_data.get('dijastolicki_krvni_tlak', 0)
     
@@ -340,7 +338,7 @@ def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
             "antihipertenzivna terapija"
         ])
     
-    # BMI i gojaznost (srednja težina)
+    # BMI i gojaznost (srednja težina) - BMI and obesity (medium weight)
     bmi = patient_data.get('BMI', 0)
     if bmi >= 30:
         query_parts.extend([
@@ -350,7 +348,7 @@ def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
     elif bmi >= 25:
         query_parts.append("prekomjerna težina ishrana")
     
-    # Ostali parametri
+    # Ostali parametri - Other parameters
     if patient_data.get('mentalno_zdravlje', 0) == 1:
         query_parts.append("mentalno zdravlje depresija anksioznost podrška")
     
@@ -363,13 +361,13 @@ def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
     if not query_parts:
         query_parts = ["prenatalna njega zdrava trudnoća preporuke"]
     
-    # Poveži sa više termina za bolju pretragu
+    # Poveži sa više termina za bolju pretragu - Connect with multiple terms for better search
     query = " ".join(query_parts)
     return query
 
 
 def test_rag_system(pdf_path: str = None):
-    """Testira RAG sistem."""
+    """Testira RAG sistem. - Tests the RAG system."""
     print("\n" + "="*50)
     print("TESTIRANJE RAG SISTEMA (poboljšana verzija)")
     print("="*50)
