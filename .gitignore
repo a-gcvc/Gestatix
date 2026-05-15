@@ -59,13 +59,6 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-
-# Chroma vektorska baza 
-chroma_db/
-chroma/
-*.chroma
-chroma.sqlite3
-
 # Uploadovani fajlovi (ako korisnici upload-uju PDF-ove)
 uploads/
 temp/
