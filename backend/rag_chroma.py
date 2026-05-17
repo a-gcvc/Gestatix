@@ -41,7 +41,7 @@ GUIDE_INFO = {
 CLINICAL_THRESHOLDS = {
     'glukoza': {
         'normalna':    (3.9, 5.5),
-        'povisena':    (5.5, 7.8),
+        'blago povisena':    (5.5, 7.8),
         'visoka':      (7.8, 11.0),
         'kriticna':    (11.0, float('inf'))
     },

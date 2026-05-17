@@ -14,7 +14,6 @@ const ragContent = document.getElementById('rag-content');
 const loadingOverlay = document.getElementById('loading-overlay');
 
 let riskChart = null;
-let featureChart = null;
 let lastPredictionData = null;
 
 // STAL stranica elementi - STAL page elements
@@ -407,33 +406,24 @@ async function displayResults(riskData, ragText, inputData) {
                 labels: ['Nizak rizik', 'Visok rizik'],
                 datasets: [{
                     data: [lowProb, highProb],
-                    backgroundColor: ['#81c784', '#f06292'],
+                    backgroundColor: [
+                        riskLevel === 'High' ? '#f8d7da' : '#81c784',
+                        riskLevel === 'High' ? '#f06292' : '#c8e6c9'
+                    ],
                     borderWidth: 0,
-                    hoverOffset: 15,
-                    cutout: isMobile ? '60%' : '65%'
+                    hoverOffset: 8
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                cutout: isMobile ? '60%' : '65%',
+                cutout: '72%',
                 plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: {
-                            font: { size: isMobile ? 10 : 12, weight: 'bold' },
-                            padding: isMobile ? 10 : 15,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            boxWidth: isMobile ? 10 : 12
-                        }
-                    },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                return `${label}: ${value.toFixed(1)}%`;
+                                return `${context.label}: ${context.raw.toFixed(1)}%`;
                             }
                         }
                     }
@@ -477,95 +467,22 @@ async function displayResults(riskData, ragText, inputData) {
         centerText.style.minWidth = isMobile ? '55px' : '80px';
         centerText.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
         
+        const isHigh = riskLevel === 'High';
+        const mainColor = isHigh ? '#e91e63' : '#2e7d32';
+        const bgColor   = isHigh ? 'rgba(255,240,243,0.95)' : 'rgba(240,255,244,0.95)';
+        centerText.style.backgroundColor = bgColor;
+        centerText.style.border = `2px solid ${mainColor}30`;
         centerText.innerHTML = `
-            <div style="font-size: ${fontSize}; font-weight: 700; color: ${highProb > lowProb ? '#e91e63' : '#4caf50'}; line-height: 1.2;">
+            <div style="font-size: ${fontSize}; font-weight: 700; color: ${mainColor}; line-height: 1.1;">
                 ${dominantPercent}%
             </div>
-            <div style="font-size: ${subFontSize}; color: #7a5d66; margin-top: 4px;">
-                ${dominantRisk}
+            <div style="font-size: ${subFontSize}; color: ${mainColor}cc; margin-top: 3px; font-weight: 600; letter-spacing: 0.02em;">
+                ${isHigh ? 'VISOK' : 'NIZAK'}
+            </div>
+            <div style="font-size: calc(${subFontSize} * 0.85); color: #9e8a8f; margin-top: 1px;">
+                rizik
             </div>
         `;
-    }
-    
-    // ============================================================
-    // BAR CHART - Feature Importance - BAR CHART - Feature Importance
-    // ============================================================
-    
-    let featureData;
-    try {
-        featureData = await loadFeatureImportance();
-    } catch (err) {
-        console.error('Greška pri učitavanju feature importance:', err);
-        featureData = {
-            labels: ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
-            values: [0.2262, 0.2159, 0.1464, 0.1438, 0.0959],
-            percentages: [22.62, 21.59, 14.64, 14.38, 9.59]
-        };
-    }
-    
-    // Mapa za prikaz imena na bosanskom jeziku - Map for displaying names in Bosnian language
-    const featureNamesMap = {
-        'dijabetes': 'Dijagnoza dijabetesa',
-        'glukoza_u_krvi': 'Glukoza u krvi',
-        'otkucaji_srca': 'Otkucaji srca',
-        'BMI': 'BMI',
-        'gestacijski_dijabetes': 'Gestacijski dijabetes',
-        'mentalno_zdravlje': 'Mentalno zdravlje',
-        'komplikacije_u_proslosti': 'Komplikacije u prošlosti',
-        'dob': 'Dob',
-        'sistolicki_krvni_tlak': 'Sistolicki pritisak',
-        'dijastolicki_krvni_tlak': 'Dijastolicki pritisak',
-        'tjelesna_temp': 'Tjelesna temperatura'
-    };
-    
-    const displayLabels = featureData.labels.slice(0, 5).map(label => 
-        featureNamesMap[label] || label
-    );
-    const displayPercentages = featureData.percentages.slice(0, 5);
-    
-    const ctx2 = document.getElementById('featureChart');
-    if (ctx2) {
-        if (featureChart) featureChart.destroy();
-        featureChart = new Chart(ctx2.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: displayLabels,
-                datasets: [{
-                    label: 'Utjecaj na rizik (%)',
-                    data: displayPercentages,
-                    backgroundColor: '#f06292',
-                    borderRadius: 8,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'top', labels: { font: { size: 10 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.raw.toFixed(1)}% utjecaja na predikciju rizika`;
-                            }
-                        }
-                    }
-                },
-                scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        max: 30,
-                        title: { display: true, text: 'Utjecaj (%)', font: { size: 10 } },
-                        grid: { color: '#f0e0e6' }
-                    },
-                    x: {
-                        title: { display: true, text: 'Faktori rizika', font: { size: 10 } },
-                        ticks: { font: { size: isMobile ? 9 : 10 }, rotation: isMobile ? 25 : 0 }
-                    }
-                }
-            }
-        });
     }
     
     // RAG preporuke - RAG recommendations
@@ -573,6 +490,281 @@ async function displayResults(riskData, ragText, inputData) {
     if (ragDiv) {
         ragDiv.innerHTML = ragText ? ragText.replace(/\n/g, '<br>') : '<p>Nema dodatnih preporuka za prikaz.</p>';
     }
+
+    // Personalizovani prikaz parametara
+    if (inputData) {
+        renderParameterGauges(inputData, riskLevel);
+    }
+}
+
+
+// ============================================================
+// PERSONALIZOVANI VIZUALNI PRIKAZ PARAMETARA PACIJENTICE
+// ============================================================
+
+function renderParameterGauges(inputData, riskLevel) {
+    const container = document.getElementById('parameter-gauges');
+    if (!container) return;
+
+    // Klinički referentni rasponi i klasifikacije
+    const params = [
+        {
+            key: 'glukoza_u_krvi',
+            label: 'Glukoza u krvi',
+            unit: 'mmol/L',
+            icon: '🩸',
+            min: 2, max: 20,
+            zones: [
+                { from: 2,    to: 3.9,  label: 'Niska',          color: '#64b5f6', textColor: '#1565c0' },
+                { from: 3.9,  to: 5.5,  label: 'Normalna',       color: '#81c784', textColor: '#2e7d32' },
+                { from: 5.5,  to: 7.8,  label: 'Blago povišena',       color: '#ffb74d', textColor: '#e65100' },
+                { from: 7.8,  to: 11.0, label: 'Visoka',         color: '#ef9a9a', textColor: '#b71c1c' },
+                { from: 11.0, to: 20,   label: 'Kritična',       color: '#e91e63', textColor: '#880e4f' }
+            ]
+        },
+        {
+            key: 'sistolicki_krvni_tlak',
+            label: 'Sistolički pritisak',
+            unit: 'mmHg',
+            icon: '💓',
+            min: 70, max: 200,
+            zones: [
+                { from: 70,  to: 120, label: 'Optimalan',        color: '#81c784', textColor: '#2e7d32' },
+                { from: 120, to: 130, label: 'Normalan',         color: '#a5d6a7', textColor: '#388e3c' },
+                { from: 130, to: 140, label: 'Normalno visok',   color: '#ffcc80', textColor: '#e65100' },
+                { from: 140, to: 160, label: 'Blaga hiper.',     color: '#ffb74d', textColor: '#bf360c' },
+                { from: 160, to: 180, label: 'Umjerena hiper.',  color: '#ef9a9a', textColor: '#b71c1c' },
+                { from: 180, to: 200, label: 'Teška hiper.',     color: '#e91e63', textColor: '#880e4f' }
+            ]
+        },
+        {
+            key: 'dijastolicki_krvni_tlak',
+            label: 'Dijastolički pritisak',
+            unit: 'mmHg',
+            icon: '💗',
+            min: 40, max: 130,
+            zones: [
+                { from: 40, to: 80,  label: 'Optimalan',         color: '#81c784', textColor: '#2e7d32' },
+                { from: 80, to: 85,  label: 'Normalan',          color: '#a5d6a7', textColor: '#388e3c' },
+                { from: 85, to: 90,  label: 'Normalno visok',    color: '#ffcc80', textColor: '#e65100' },
+                { from: 90, to: 100, label: 'Blaga hiper.',      color: '#ffb74d', textColor: '#bf360c' },
+                { from: 100,to: 110, label: 'Umjerena hiper.',   color: '#ef9a9a', textColor: '#b71c1c' },
+                { from: 110,to: 130, label: 'Teška hiper.',      color: '#e91e63', textColor: '#880e4f' }
+            ]
+        },
+        {
+            key: 'BMI',
+            label: 'BMI',
+            unit: 'kg/m²',
+            icon: '⚖️',
+            min: 14, max: 45,
+            zones: [
+                { from: 14,   to: 18.5, label: 'Pothranjenost',  color: '#64b5f6', textColor: '#1565c0' },
+                { from: 18.5, to: 25,   label: 'Normalan',       color: '#81c784', textColor: '#2e7d32' },
+                { from: 25,   to: 30,   label: 'Prekomjeran',    color: '#ffcc80', textColor: '#e65100' },
+                { from: 30,   to: 35,   label: 'Gojaznost I',    color: '#ffb74d', textColor: '#bf360c' },
+                { from: 35,   to: 40,   label: 'Gojaznost II',   color: '#ef9a9a', textColor: '#b71c1c' },
+                { from: 40,   to: 45,   label: 'Gojaznost III',  color: '#e91e63', textColor: '#880e4f' }
+            ]
+        },
+        {
+            key: 'otkucaji_srca',
+            label: 'Otkucaji srca',
+            unit: 'bpm',
+            icon: '❤️',
+            min: 40, max: 150,
+            zones: [
+                { from: 40,  to: 60,  label: 'Bradikardija',     color: '#64b5f6', textColor: '#1565c0' },
+                { from: 60,  to: 100, label: 'Normalan',         color: '#81c784', textColor: '#2e7d32' },
+                { from: 100, to: 120, label: 'Blaga tahikardija',color: '#ffcc80', textColor: '#e65100' },
+                { from: 120, to: 150, label: 'Tahikardija',      color: '#ef9a9a', textColor: '#b71c1c' }
+            ]
+        },
+        {
+            key: 'tjelesna_temp',
+            label: 'Tjelesna temperatura',
+            unit: '°C',
+            icon: '🌡️',
+            min: 35, max: 40,
+            decimals: 1,
+            zones: [
+                { from: 35,   to: 36.0, label: 'Niska',          color: '#64b5f6', textColor: '#1565c0' },
+                { from: 36.0, to: 37.5, label: 'Normalna',       color: '#81c784', textColor: '#2e7d32' },
+                { from: 37.5, to: 38.0, label: 'Subfebrilan',    color: '#ffcc80', textColor: '#e65100' },
+                { from: 38.0, to: 40,   label: 'Febrilna',       color: '#ef9a9a', textColor: '#b71c1c' }
+            ]
+        }
+    ];
+
+    function getZone(value, zones) {
+        for (const z of zones) {
+            if (value >= z.from && value < z.to) return z;
+        }
+        return zones[zones.length - 1];
+    }
+
+    function getBarPercent(value, min, max) {
+        return Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+    }
+
+    function buildZoneGradient(zones, min, max) {
+        const stops = zones.map(z => {
+            const startPct = ((z.from - min) / (max - min)) * 100;
+            const endPct   = ((z.to   - min) / (max - min)) * 100;
+            return `${z.color} ${startPct.toFixed(1)}%, ${z.color} ${endPct.toFixed(1)}%`;
+        });
+        return `linear-gradient(to right, ${stops.join(', ')})`;
+    }
+
+    let html = `
+        <div style="
+            margin-top: 2rem;
+            background: linear-gradient(135deg, #fff8fa, #fff0f5);
+            border-radius: 18px;
+            padding: 1.5rem 1.5rem 1rem;
+            border: 1px solid #fce4ec;
+            box-shadow: 0 4px 20px rgba(233,30,99,0.07);
+        ">
+            <h3 style="
+                margin: 0 0 0.3rem 0;
+                color: #ad1457;
+                font-size: 1.1rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            ">
+                <i class="fas fa-chart-bar" style="color:#e91e63;"></i>
+                Vaši parametri u kliničkom kontekstu
+            </h3>
+            <p style="margin: 0 0 1.2rem 0; font-size: 0.82rem; color: #9e6374;">
+                Svaka traka prikazuje gdje se vaša vrijednost nalazi unutar kliničkih raspona.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+    `;
+
+    for (const param of params) {
+        const value = inputData[param.key];
+        if (value === undefined || value === null || isNaN(value)) continue;
+
+        const zone    = getZone(value, param.zones);
+        const pct     = getBarPercent(value, param.min, param.max);
+        const gradient = buildZoneGradient(param.zones, param.min, param.max);
+        const decimals = param.decimals || 0;
+
+        html += `
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #6d2b47;">
+                        ${param.icon} ${param.label}
+                    </span>
+                    <span style="
+                        font-size: 0.9rem;
+                        font-weight: 700;
+                        color: ${zone.textColor};
+                        background: ${zone.color}30;
+                        border: 1px solid ${zone.color};
+                        padding: 1px 8px;
+                        border-radius: 20px;
+                    ">
+                        ${value.toFixed(decimals)} ${param.unit}
+                        <span style="font-size: 0.72rem; font-weight: 500; margin-left: 4px; opacity: 0.85;">
+                            · ${zone.label}
+                        </span>
+                    </span>
+                </div>
+
+                <div style="position: relative; height: 18px; border-radius: 9px; overflow: visible;">
+                    <!-- Zona pozadina -->
+                    <div style="
+                        position: absolute; inset: 0;
+                        border-radius: 9px;
+                        background: ${gradient};
+                        opacity: 0.35;
+                    "></div>
+                    <!-- Zona puna traka do vrijednosti -->
+                    <div style="
+                        position: absolute; top: 0; left: 0; bottom: 0;
+                        width: ${pct.toFixed(1)}%;
+                        border-radius: 9px;
+                        background: ${gradient};
+                        background-size: ${(100 / pct * 100).toFixed(1)}% 100%;
+                        transition: width 0.8s cubic-bezier(.4,0,.2,1);
+                    "></div>
+                    <!-- Marker igla -->
+                    <div style="
+                        position: absolute;
+                        top: -4px; bottom: -4px;
+                        left: calc(${pct.toFixed(1)}% - 2px);
+                        width: 4px;
+                        background: ${zone.textColor};
+                        border-radius: 2px;
+                        box-shadow: 0 0 6px ${zone.color};
+                        transition: left 0.8s cubic-bezier(.4,0,.2,1);
+                        z-index: 2;
+                    "></div>
+                </div>
+
+                <!-- Zone legenda -->
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 1px;">
+                    ${param.zones.map(z => `
+                        <span style="
+                            font-size: 0.65rem;
+                            padding: 1px 6px;
+                            border-radius: 10px;
+                            background: ${z.color}25;
+                            color: ${z.textColor};
+                            border: 1px solid ${z.color}60;
+                            white-space: nowrap;
+                        ">${z.label}: ${z.from}${z === param.zones[param.zones.length-1] ? '+' : '–'+z.to}</span>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Binarni parametri — checkboxovi
+    const binaryParams = [
+        { key: 'dijabetes',                label: 'Dijagnoza dijabetesa',            icon: '💉' },
+        { key: 'gestacijski_dijabetes',    label: 'Gestacijski dijabetes',           icon: '🤰' },
+        { key: 'komplikacije_u_proslosti', label: 'Komplikacije u prošlosti',        icon: '📋' },
+        { key: 'mentalno_zdravlje',        label: 'Problemi s mentalnim zdravljem',  icon: '🧠' }
+    ];
+
+    const activeBinary = binaryParams.filter(p => inputData[p.key] === 1);
+    const inactiveBinary = binaryParams.filter(p => inputData[p.key] === 0);
+
+    html += `
+        <div style="
+            margin-top: 0.6rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #fce4ec;
+            display: flex; flex-wrap: wrap; gap: 0.5rem;
+        ">
+    `;
+    for (const p of binaryParams) {
+        const active = inputData[p.key] === 1;
+        html += `
+            <div style="
+                display: flex; align-items: center; gap: 6px;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                background: ${active ? '#fce4ec' : '#f1f8e9'};
+                color: ${active ? '#c2185b' : '#558b2f'};
+                border: 1px solid ${active ? '#f48fb1' : '#aed581'};
+            ">
+                ${p.icon}
+                ${p.label}:
+                <strong>${active ? 'Da ⚠️' : 'Ne ✓'}</strong>
+            </div>
+        `;
+    }
+
+    html += `</div></div></div>`;
+
+    container.innerHTML = html;
 }
 
 // Dodaj event listener za resize prozora da se chart prilagodi (dodajte na kraj script.js) - Add event listener for window resize to adjust the chart (add at the end of script.js)
@@ -603,13 +795,6 @@ window.addEventListener('resize', function() {
         if (subtitleDiv) subtitleDiv.style.fontSize = subFontSize;
     }
     
-    // Ažuriraj bar chart - Update bar chart
-    if (featureChart) {
-        const isMobileResize = window.innerWidth < 768;
-        featureChart.config.options.scales.x.ticks.rotation = isMobileResize ? 25 : 0;
-        featureChart.config.options.scales.x.ticks.font.size = isMobileResize ? 9 : 10;
-        featureChart.update();
-    }
 });
 
 // Sačuvaj zadnju predikciju za feedback - Save last prediction for feedback
@@ -781,6 +966,8 @@ async function submitAssessment(event) {
         // Prikazujemo glavni kontejner i sekciju rezultata - Show main container and results section
         appMain.style.display = 'block';
         form.style.display = 'none'; // Sakrij formu unutar appMain da ne ostane prazna sekcija
+        const formSubtitle = document.getElementById('form-subtitle');
+        if (formSubtitle) formSubtitle.style.display = 'none';
         resultsSection.style.display = 'block';
         
         try {
@@ -831,30 +1018,12 @@ function resetAndShowForm() {
     const errorSpans = document.querySelectorAll('.error-message');
     errorSpans.forEach(span => span.innerText = '');
     form.style.display = 'block';
+    const formSubtitleReset = document.getElementById('form-subtitle');
+    if (formSubtitleReset) formSubtitleReset.style.display = 'block';
     resultsSection.style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Učitaj stvarnu feature importance iz modela - Load actual feature importance from the model
-async function loadFeatureImportance() {
-    try {
-        const response = await fetch(`${API_BASE}/model/features`);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Feature importance učitana:', data);
-            return data;
-        }
-    } catch (err) {
-        console.warn('Nije moguće učitati feature importance:', err);
-    }
-    // Fallback vrijednosti ako API ne radi - Fallback values if API fails
-    console.log('Koristim fallback vrijednosti za feature importance');
-    return {
-        labels: ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
-        values: [0.2262, 0.2159, 0.1464, 0.1438, 0.0959],
-        percentages: [22.62, 21.59, 14.64, 14.38, 9.59]
-    };
-}
 
 // ============================================================
 // SENSE - THINK - ACT - LEARN CIKLUS
@@ -1102,6 +1271,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Inicijalni prikaz — forma vidljiva, rezultati skriveni - Initial display — form visible, results hidden
     form.style.display = 'block';
+    const formSubtitleReset = document.getElementById('form-subtitle');
+    if (formSubtitleReset) formSubtitleReset.style.display = 'block';
     resultsSection.style.display = 'none';
 
     // 2. Provjera API statusa i učitavanje statistike feedback sistema - Check API status and load feedback system statistics

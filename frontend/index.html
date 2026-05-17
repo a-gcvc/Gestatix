@@ -96,7 +96,7 @@
                     <i class="fas fa-arrow-left"></i> Početna
                 </button>
                 <h2><i class="fas fa-notes-medical"></i> Procjena zdravstvenog rizika</h2>
-                <p>Molimo unesite sve podatke za tačnu procjenu</p>
+                <p id="form-subtitle">Molimo unesite sve podatke za tačnu procjenu</p>
             </div>
 
             <!-- Forma -->
@@ -185,7 +185,7 @@
                             <span class="error-message" id="gdm-error"></span>
                         </div>
                         <div class="input-group">
-                            <label for="mental">Da li imate problema s mentalnim zdravljem? (depresija/anksioznost)</label>
+                            <label for="mental">Da li u zadnje vrijeme osjećate promjene mentalnog stanja? (npr. depresija/anksioznost)</label>
                             <select id="mental" name="mental" required>
                                 <option value="" disabled selected>-- Odaberite --</option>
                                 <option value="0">Ne</option>
@@ -228,17 +228,20 @@
                 </div>
 
                 <!-- Charts -->
-                <div class="charts-container">
-                    <div class="chart-card">
+                <div class="charts-container charts-single">
+                    <div class="chart-card chart-card--risk">
                         <h3>Vjerovatnoća rizika</h3>
                         <canvas id="riskChart" width="300" height="300"></canvas>
                     </div>
-                    <div class="chart-card">
-                        <h3>Važnost ključnih faktora</h3>
-                        <canvas id="featureChart" width="400" height="300"></canvas>
-                    </div>
                 </div>
 
+                <div id="parameter-gauges"></div>
+
+                <div class="rag-section">
+                    
+                </div>
+                <!-- Personalizovani prikaz parametara -->
+                
                 <!-- Dodatne informacije: RAG preporuke -->
                 <div class="rag-section">
                     <button type="button" id="toggle-rag-btn" class="btn-rag"><i class="fas fa-book-open"></i> Saznaj više – Preporuke iz vodiča</button>
@@ -254,13 +257,13 @@
                 <!-- Feedback dugmad -->
                 <div class="feedback-section" style="margin-top: 2rem; padding: 1rem; background: #fff0f3; border-radius: 20px;">
                     <h4 style="color: #ad1457; margin-bottom: 1rem;"><i class="fas fa-heart"></i> Povratna informacija</h4>
-                    <p style="margin-bottom: 1rem;">Da li je ova procjena bila korisna i tačna?</p>
+                    <p style="margin-bottom: 1rem;">Da li su prethodno prikazane informacije i preporuke korisne?</p>
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="feedback-yes" class="btn-feedback" style="background: #4caf50; color: white; padding: 10px 25px; border: none; border-radius: 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-thumbs-up"></i> Da, tačna je
+                            <i class="fas fa-thumbs-up"></i> Da, korisne su
                         </button>
                         <button type="button" id="feedback-no" class="btn-feedback" style="background: #f44336; color: white; padding: 10px 25px; border: none; border-radius: 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-thumbs-down"></i> Ne, nije tačna
+                            <i class="fas fa-thumbs-down"></i> Ne, nisu korisne
                         </button>
                     </div>
                     <div id="feedback-message" style="margin-top: 1rem; font-size: 0.9rem; text-align: center; color: #ad1457; display: none;"></div>
