@@ -1,13 +1,9 @@
-# =====================
 # Jupyter Notebook
-# =====================
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
 *.ipynb
 
-# =====================
 # Python cache
-# =====================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,9 +14,13 @@ __pycache__/
 dist/
 build/
 
-# =====================
+# Chroma vektorska baza 
+chroma_db/
+chroma/
+*.chroma
+chroma.sqlite3
+
 # Okruženje (Virtual Environments)
-# =====================
 venv/
 env/
 .env
@@ -29,9 +29,7 @@ ENV/
 env.bak/
 venv.bak/
 
-# =====================
 # API keys i osjetljivi podaci
-# =====================
 .env
 keys.txt
 secrets.py
@@ -39,17 +37,18 @@ config.py
 *.key
 *.pem
 
-# =====================
 # Windows / OS specifično
-# =====================
 Thumbs.db
 desktop.ini
 .DS_Store
 *.log
 
-# =====================
+# ML MODELI 
+models/*.pkl
+models/model_version.txt
+models/feedback_data.csv
+
 # Flask/Python instances
-# =====================
 instance/
 .pytest_cache/
 .coverage
@@ -83,4 +82,6 @@ logs/
 .idea/
 *.swp
 *.swo
+.DS_Store
+Thumbs.db
 *~
