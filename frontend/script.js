@@ -356,7 +356,7 @@ async function displayResults(riskData, ragText, inputData) {
             actionRecommendation.style.color = '#c2185b';
             actionRecommendation.innerHTML = `
                 <i class="fas fa-stethoscope" style="color: #e91e63; margin-right: 8px;"></i>
-                <strong>⚠️ VAŽNA PREPORUKA:</strong><br>
+                <strong>VAŽNA PREPORUKA:</strong><br>
                 Vaši parametri ukazuju na povišen rizik po zdravlje vas i vaše bebe. <strong>Preporučujemo vam da se što prije javite svom ginekologu</strong> radi dodatnih pretraga i pravovremene intervencije.
                 <div style="font-size: 0.85rem; margin-top: 8px; color: #ad1457;">
                     📞 Kontaktirajte vašu ambulantu ili hitnu službu ako osjetite bilo kakve simptome.
@@ -382,7 +382,7 @@ async function displayResults(riskData, ragText, inputData) {
                 <strong>PREPORUKA:</strong><br>
                 Vaši parametri su u okviru normalnih vrijednosti. Nastavite sa redovnim prenatalnim pregledima i zdravim načinom života.
                 <div style="font-size: 0.85rem; margin-top: 8px; color: #2e7d32;">
-                    🏃‍♀️ Preporučuje se umjerena fizička aktivnost (šetnja, plivanje) i uravnotežena ishrana.
+                    🏃‍♀️ Preporučuje se umjerena fizička aktivnost i uravnotežena ishrana.
                 </div>
             `;
         }
@@ -1116,7 +1116,7 @@ async function checkAndNotifyRetraining() {
             
             // Ako je potreban retraining, pitaj korisnika - If retraining is needed, ask the user
             if (needsRetraining && newSamples >= threshold) {
-                const userConfirmed = confirm(`📊 Poboljšanje modela\n\nPrikupljeno je ${newSamples} novih primjera za učenje.\n\nŽelite li poboljšati model sada?`);
+                const userConfirmed = confirm(`Poboljšanje modela\n\nPrikupljeno je ${newSamples} novih primjera za učenje.\n\nŽelite li poboljšati model sada?`);
                 if (userConfirmed) {
                     await triggerRetraining();
                 }
@@ -1153,7 +1153,7 @@ async function triggerRetraining() {
             // Sakrij poruku nakon 5 sekundi - Hide message after 5 seconds
             setTimeout(() => {
                 showRetrainingStatus(false);
-            }, 5000);
+            }, 50000);
             
             // Osvježi statistiku - Refresh statistics
             await loadFeedbackStats();
