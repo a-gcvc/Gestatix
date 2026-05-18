@@ -3,14 +3,18 @@ app.py
 Flask API za predikciju rizika trudnoće koristeći Random Forest model i RAG preporuke.
 """
 
+import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import joblib
 import numpy as np
 from datetime import datetime
 
 from model_utils import predict_risk, get_model_info
 from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
 from feedback_manager import get_feedback_manager, FeedbackManager
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -215,8 +219,8 @@ def get_feature_importance():
         import joblib
         import numpy as np
         
-        model = joblib.load('models/rf_model.pkl')
-        feature_cols = joblib.load('models/feature_cols_rf.pkl')
+        model = joblib.load(os.path.join(BASE_DIR, 'models/rf_model.pkl'))
+        feature_cols = joblib.load(os.path.join(BASE_DIR, 'models/feature_cols_rf.pkl'))
         
         feature_importance = model.feature_importances_
         
