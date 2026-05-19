@@ -1067,7 +1067,7 @@ const cycleDescriptions = {
     learn: {
         title: "LEARN - Kontinuirano učenje",
         icon: "fa-graduation-cap",
-        description: "Sistem uči iz svake interakcije. Korisnici daju povratnu informaciju o tačnosti predikcije, što se čuva u bazi. Nakon 10 novih primjera, model se automatski poboljšava (retraining).",
+        description: "Sistem uči iz svake interakcije. Korisnici daju povratnu informaciju o tačnosti predikcije, što se čuva u bazi. Administrator može pokrenuti poboljšanje modela jednim klikom na dugme.",
         details: [
             "Feedback sistem prikuplja povratne informacije",
             "Podaci se čuvaju u zasebnom fajlu za retraining",
@@ -1131,7 +1131,8 @@ async function triggerRetraining() {
         setTimeout(() => {
             showRetrainingStatus(false);
         }, 3000);
-        alert('Greška pri poboljšanju modela.');
+        showRetrainingStatus(true, '<i class="fas fa-times-circle" style="color:#e91e63"></i> Greška pri poboljšanju modela.');
+        setTimeout(() => showRetrainingStatus(false), 4000);
     }
 }
 
