@@ -4,7 +4,6 @@ import hashlib
 from typing import List, Dict, Any, Tuple
 
 import chromadb
-from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 
@@ -106,10 +105,7 @@ def get_chroma_client():
     global _chroma_client
     if _chroma_client is None:
         os.makedirs(CHROMA_PERSIST_DIR, exist_ok=True)
-        _chroma_client = chromadb.PersistentClient(
-            path=CHROMA_PERSIST_DIR,
-            settings=Settings(anonymized_telemetry=False)
-        )
+        _chroma_client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIR)
     return _chroma_client
 
 
