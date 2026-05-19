@@ -8,13 +8,15 @@ import os
 import sys
 from rag_chroma import build_vector_store_from_pdf, test_rag_system
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def main():
     print("\n" + "="*60)
     print("  IZGRADNJA VEKTORSKE BAZE ZA RAG SISTEM")
     print("="*60)
     
     # Putanja do PDF fajla (jezik: bosanski/hrvatski/srpski) - path to PDF file (language: Bosnian/Croatian/Serbian)
-    pdf_path = "documents/Klinicki_vodic_za_antenatalnu_zastitu.pdf"
+    pdf_path = os.path.join(BASE_DIR, "documents", "Klinicki_vodic_za_antenatalnu_zastitu.pdf")
     
     # Provjeri da li PDF postoji - check if PDF exists
     if not os.path.exists(pdf_path):

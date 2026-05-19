@@ -8,11 +8,21 @@ Redoslijed koraka:
   3. Provjera .env fajla
   4. Provjera PDF dokumenta
   5. Treniranje modela (ako model ne postoji)
-  6. Izgradnja vektorske baze (ako baza ne postoji)
+  6. Izgradnja vektorske baze (ako baza ne postoji ili je prazna)
 """
 
 import os
 import sys
+
+# Apsolutna putanja do backend/ foldera — radi bez obzira odakle se pokreće
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+PDF_PATH      = os.path.join(BASE_DIR, "documents", "Klinicki_vodic_za_antenatalnu_zastitu.pdf")
+CHROMA_DIR    = os.path.join(BASE_DIR, "chroma_db")
+DATASET_PATH  = os.path.join(BASE_DIR, "data", "dataset.csv")
+MODEL_PATH    = os.path.join(BASE_DIR, "models", "rf_model.pkl")
+ENCODER_PATH  = os.path.join(BASE_DIR, "models", "label_encoder_rf.pkl")
+FEATURES_PATH = os.path.join(BASE_DIR, "models", "feature_cols_rf.pkl")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -33,16 +43,16 @@ def check_python_version():
 # ─────────────────────────────────────────────────────────────────────────────
 
 REQUIRED_PACKAGES = [
-    ("flask",                "Flask"),
-    ("flask_cors",           "flask-cors"),
-    ("sklearn",              "scikit-learn"),
-    ("pandas",               "pandas"),
-    ("numpy",                "numpy"),
-    ("joblib",               "joblib"),
-    ("chromadb",             "chromadb"),
-    ("sentence_transformers","sentence-transformers"),
-    ("PyPDF2",               "PyPDF2"),
-    ("dotenv",               "python-dotenv"),
+    ("flask",                 "Flask"),
+    ("flask_cors",            "flask-cors"),
+    ("sklearn",               "scikit-learn"),
+    ("pandas",                "pandas"),
+    ("numpy",                 "numpy"),
+    ("joblib",                "joblib"),
+    ("chromadb",              "chromadb"),
+    ("sentence_transformers", "sentence-transformers"),
+    ("PyPDF2",                "PyPDF2"),
+    ("dotenv",                "python-dotenv"),
 ]
 
 def check_packages():
@@ -66,15 +76,17 @@ def check_packages():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def check_env_file():
-    if not os.path.exists(".env"):
+    env_path         = os.path.join(BASE_DIR, ".env")
+    env_example_path = os.path.join(BASE_DIR, ".env.example")
+
+    if not os.path.exists(env_path):
         print("\n  Kreiranje .env fajla iz predloška...")
-        if os.path.exists(".env.example"):
+        if os.path.exists(env_example_path):
             import shutil
-            shutil.copy(".env.example", ".env")
+            shutil.copy(env_example_path, env_path)
             print("  .env kreiran iz .env.example — popuni vrijednosti po potrebi.")
         else:
-            # Kreiraj minimalni .env
-            with open(".env", "w") as f:
+            with open(env_path, "w") as f:
                 f.write("# Hugging Face token (opcionalno, za privatne modele)\n")
                 f.write("HF_TOKEN=\n")
             print("  .env kreiran s praznim vrijednostima.")
@@ -86,14 +98,12 @@ def check_env_file():
 # 4. PROVJERA PDF DOKUMENTA
 # ─────────────────────────────────────────────────────────────────────────────
 
-PDF_PATH = "documents/Klinicki_vodic_za_antenatalnu_zastitu.pdf"
-
 def check_pdf():
     if not os.path.exists(PDF_PATH):
         print(f"\n  UPOZORENJE: PDF nije pronađen na putanji: {PDF_PATH}")
         print("  Opcije:")
-        print("    a) Stavi PDF u 'documents/' folder i preimenuji ga u:")
-        print(f"       'Klinicki_vodic_za_antenatalnu_zastitu.pdf'")
+        print("    a) Stavi PDF u 'backend/documents/' folder i preimenuji ga u:")
+        print("       'Klinicki_vodic_za_antenatalnu_zastitu.pdf'")
         print("    b) Pokreni setup s flagom --demo za testni PDF")
 
         if "--demo" in sys.argv:
@@ -106,7 +116,6 @@ def check_pdf():
             return True
         else:
             print("  Bez PDF-a RAG sistem neće raditi.")
-            print("  Ostatak setup-a će biti preskočen.")
             return False
     else:
         size_kb = os.path.getsize(PDF_PATH) // 1024
@@ -115,7 +124,6 @@ def check_pdf():
 
 
 def _create_demo_pdf():
-    """Kreira demo PDF s osnovnim medicinskim sadržajem za testiranje."""
     try:
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
@@ -123,10 +131,8 @@ def _create_demo_pdf():
         print("  ReportLab nije instaliran. Pokreni: pip install reportlab")
         return
 
-    os.makedirs("documents", exist_ok=True)
-    demo_path = "documents/Klinicki_vodic_za_antenatalnu_zastitu.pdf"
-
-    c = canvas.Canvas(demo_path, pagesize=letter)
+    os.makedirs(os.path.join(BASE_DIR, "documents"), exist_ok=True)
+    c = canvas.Canvas(PDF_PATH, pagesize=letter)
     width, height = letter
     y = height - 50
 
@@ -134,37 +140,17 @@ def _create_demo_pdf():
         "KLINIČKI VODIČ ZA ANTENATALNU ZAŠTITU (DEMO VERZIJA)",
         "",
         "=== DIJABETES U TRUDNOĆI ===",
-        "Gestacijski dijabetes (GDM) je poremećaj tolerancije glukoze koji se",
-        "prvi put dijagnostikuje tokom trudnoće. Ciljne vrijednosti glukoze:",
-        "natašte <5.3 mmol/L, jedan sat nakon obroka <7.8 mmol/L.",
-        "Liječenje uključuje dijetu s 40-45% ugljikohidrata, redovnu fizičku",
-        "aktivnost od 30 minuta dnevno i monitoring glukoze četiri puta dnevno.",
-        "Ako se ciljne vrijednosti ne postižu dijetom, uvodi se insulin ili metformin.",
+        "Gestacijski dijabetes (GDM) je poremećaj tolerancije glukoze.",
+        "Ciljne vrijednosti: natašte <5.3 mmol/L, 1h nakon obroka <7.8 mmol/L.",
+        "Liječenje: dijeta 40-45% ugljikohidrata, fizička aktivnost 30 min dnevno.",
         "",
         "=== HIPERTENZIJA U TRUDNOĆI ===",
-        "Hipertenzija u trudnoći definiše se kao krvni pritisak ≥140/90 mmHg.",
-        "Preeklampsija nastaje nakon 20. sedmice i karakteriše se visokim",
-        "krvnim pritiskom s oštećenjem organa, najčešće jetre i bubrega.",
-        "Liječenje uključuje labetalol, nifedipin ili metildopu, a magnezijum",
-        "sulfat se primjenjuje za prevenciju eklampsije.",
+        "Hipertenzija: krvni pritisak ≥140/90 mmHg.",
+        "Liječenje: labetalol, nifedipin ili metildopa.",
         "",
-        "=== GOJAZNOST I TJELESNA MASA ===",
-        "Gojaznost (BMI >30) u trudnoći povećava rizik od preeklampsije",
-        "tri do četiri puta i rizik od gestacijskog dijabetesa dva do tri puta.",
-        "Preporučeno povećanje tjelesne mase tokom trudnoće iznosi 5-9 kg.",
-        "Suplementacija uključuje folnu kiselinu 5 mg dnevno u prvom trimestru",
-        "i vitamin D od 400 do 1000 IU dnevno tokom cijele trudnoće.",
-        "",
-        "=== MENTALNO ZDRAVLJE ===",
-        "Depresija i anksioznost tokom trudnoće javljaju se u 10-20% trudnica.",
-        "Preporučuje se psihološka podrška, grupni programi i savjetovanje.",
-        "Farmakoterapija se razmatra samo kada su benefiti veći od rizika.",
-        "",
-        "=== OPŠTE PREPORUKE ===",
-        "Redovni prenatalni pregledi obavljaju se 10-14 puta tokom trudnoće.",
-        "Preporučuje se zdrava ishrana bogata voćem, povrćem i cjelovitim žitaricama,",
-        "umjerena fizička aktivnost od 30 minuta dnevno, te izbjegavanje alkohola,",
-        "cigareta i lijekova bez preporuke ljekara.",
+        "=== GOJAZNOST ===",
+        "Gojaznost (BMI >30) povećava rizik od preeklampsije i GDM.",
+        "Preporučeno povećanje tjelesne mase: 5-9 kg tokom trudnoće.",
     ]
 
     for linija in sadrzaj:
@@ -175,7 +161,7 @@ def _create_demo_pdf():
             y = height - 50
 
     c.save()
-    print(f"  Demo PDF kreiran: {demo_path}")
+    print(f"  Demo PDF kreiran: {PDF_PATH}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -183,23 +169,19 @@ def _create_demo_pdf():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def check_and_train_model():
-    model_path    = "models/rf_model.pkl"
-    encoder_path  = "models/label_encoder_rf.pkl"
-    features_path = "models/feature_cols_rf.pkl"
-    dataset_path  = "data/dataset.csv"
-
-    if all(os.path.exists(p) for p in [model_path, encoder_path, features_path]):
+    if all(os.path.exists(p) for p in [MODEL_PATH, ENCODER_PATH, FEATURES_PATH]):
         print("  ML model: OK (već postoji)")
         return
 
     print("\n  ML model nije pronađen — pokrećem trening...")
 
-    if not os.path.exists(dataset_path):
-        print(f"  GREŠKA: Dataset nije pronađen na putanji: {dataset_path}")
-        print("  Dodaj 'data/dataset.csv' u projekt i ponovi setup.")
+    if not os.path.exists(DATASET_PATH):
+        print(f"  GREŠKA: Dataset nije pronađen: {DATASET_PATH}")
+        print("  Dodaj 'backend/data/dataset.csv' u projekt i ponovi setup.")
         sys.exit(1)
 
     try:
+        sys.path.insert(0, BASE_DIR)
         from model_train_rf import train_model
         train_model()
         print("  ML model: istreniran i sačuvan.")
@@ -212,28 +194,36 @@ def check_and_train_model():
 # 6. IZGRADNJA VEKTORSKE BAZE
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _baza_ima_dokumente() -> bool:
+    """Provjerava da li vektorska baza stvarno sadrži dokumente."""
+    try:
+        import chromadb
+        client = chromadb.PersistentClient(path=CHROMA_DIR)
+        cols = client.list_collections()
+        return any(
+            client.get_collection(c.name).count() > 0
+            for c in cols
+        )
+    except Exception:
+        return False
+
+
 def check_and_build_vector_store(pdf_dostupan: bool):
-    chroma_dir = "chroma_db"
-
-    # Baza postoji ako folder postoji i nije prazan
-    baza_postoji = (
-        os.path.exists(chroma_dir) and
-        any(os.scandir(chroma_dir))
-    )
-
-    if baza_postoji:
-        print("  Vektorska baza: OK (već postoji)")
+    # Provjera broja dokumenata — ne samo postojanja foldera
+    if _baza_ima_dokumente():
+        print("  Vektorska baza: OK (već postoji i popunjena)")
         return
 
     if not pdf_dostupan:
         print("  Vektorska baza: PRESKOČENA (PDF nije dostupan)")
         return
 
-    print("\n  Vektorska baza nije pronađena — pokrećem izgradnju...")
+    print("\n  Vektorska baza nije popunjena — pokrećem izgradnju...")
 
     try:
+        sys.path.insert(0, BASE_DIR)
         from rag_chroma import build_vector_store_from_pdf
-        build_vector_store_from_pdf(PDF_PATH, force_rebuild=False)
+        build_vector_store_from_pdf(PDF_PATH, force_rebuild=True)
         print("  Vektorska baza: izgrađena.")
     except Exception as e:
         print(f"  GREŠKA pri izgradnji vektorske baze: {e}")

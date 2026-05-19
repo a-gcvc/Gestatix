@@ -20,7 +20,7 @@ _collection = None
 _embedding_model = None
 
 # Konfiguracija - configuration constants
-CHROMA_PERSIST_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
+CHROMA_PERSIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
 COLLECTION_NAME = "pregnancy_advice_bhs"
 EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 

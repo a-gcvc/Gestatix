@@ -880,7 +880,7 @@ async function loadFeedbackStats() {
             const statsText = document.getElementById('stats-text');
             
             if (stats.total_feedback > 0 && statsText) {
-                statsText.innerHTML = `📊 Prikupljeno ${stats.total_feedback} povratnih informacija. ${stats.agreed_with_model} korisnika se složilo, ${stats.disagreed_with_model} nije.`;
+                statsText.innerHTML = `Prikupljeno ${stats.total_feedback} povratnih informacija. ${stats.agreed_with_model} korisnika se složilo, ${stats.disagreed_with_model} nije.`;
                 if (statsDiv) statsDiv.style.display = 'block';
             }
         }
@@ -1071,7 +1071,7 @@ const cycleDescriptions = {
         details: [
             "Feedback sistem prikuplja povratne informacije",
             "Podaci se čuvaju u zasebnom fajlu za retraining",
-            "Retraining nakon 10 novih primjera",
+            "Retraining se pokreće jednim klikom",
             "Model se kontinuirano poboljšava kroz vrijeme"
         ]
     }
@@ -1091,48 +1091,8 @@ function showRetrainingStatus(show, message = '') {
     }
 }
 
-// Praćenje broja feedbackova i provjera da li je potreban retraining - Monitor feedback count and check if retraining is needed
-async function checkAndNotifyRetraining() {
-    try {
-        const response = await fetch(`${API_BASE}/feedback/stats`);
-        if (response.ok) {
-            const stats = await response.json();
-            const newSamples = stats.new_samples_pending || 0;
-            const threshold = stats.retrain_threshold || 10;
-            const needsRetraining = stats.needs_retraining || false;
-            
-            // Ažuriraj prikaz u STAL statistici
-            const stalStatsDiv = document.getElementById('stal-stats');
-            if (stalStatsDiv && stats.total_feedback > 0) {
-                stalStatsDiv.innerHTML = `
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem;">
-                        <span><i class="fas fa-comments"></i> Feedback: ${stats.total_feedback}</span>
-                        <span><i class="fas fa-check-circle"></i> Tačnih: ${stats.agreed_with_model}</span>
-                        <span><i class="fas fa-times-circle"></i> Netačnih: ${stats.disagreed_with_model}</span>
-                        <span><i class="fas fa-sync-alt"></i> Nova za učenje: ${newSamples}/${threshold}</span>
-                    </div>
-                `;
-            }
-            
-            // Ako je potreban retraining, pitaj korisnika - If retraining is needed, ask the user
-            if (needsRetraining && newSamples >= threshold) {
-                const userConfirmed = confirm(`Poboljšanje modela\n\nPrikupljeno je ${newSamples} novih primjera za učenje.\n\nŽelite li poboljšati model sada?`);
-                if (userConfirmed) {
-                    await triggerRetraining();
-                }
-            }
-        }
-    } catch (err) {
-        console.warn('Nije moguće provjeriti status retraining-a:', err);
-    }
-}
 // Dugme za retraining - Button for retraining
 document.getElementById('retrain-btn')?.addEventListener('click', triggerRetraining);
-
-// Redovna provjera da li je potreban retraining - Regular check if retraining is needed
-setInterval(() => {
-    checkAndNotifyRetraining();
-}, 30000); // svakih 30 sekundi 
 
 // Ručno pokreni retraining - Manually trigger retraining
 async function triggerRetraining() {
@@ -1159,13 +1119,11 @@ async function triggerRetraining() {
             await loadFeedbackStats();
             await loadStalStats();
             
-            alert(`Model je uspješno poboljšan!\n\nNovi accuracy: ${(result.accuracy * 100).toFixed(2)}%\nKorišteno: ${result.total_samples} primjera (${result.feedback_samples} feedbackova)`);
         } else {
             showRetrainingStatus(true, `⚠️ ${result.message}`);
             setTimeout(() => {
                 showRetrainingStatus(false);
             }, 3000);
-            alert(`${result.message}`);
         }
     } catch (err) {
         console.error('Retraining greška:', err);
