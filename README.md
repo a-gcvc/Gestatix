@@ -192,4 +192,4 @@ Provjeri da se PDF nalazi na putanji `backend/documents/Klinicki_vodic_za_antena
 
 © 2026 Gestatix – Sva prava zadržana (All rights reserved)
 
-💙 Gestatix – Tvoj asistent u bezbrižnoj trudnoći
+:pink_heart: Gestatix – Tvoj asistent u bezbrižnoj trudnoći
