@@ -84,20 +84,20 @@ gestatix/
 
 ## 🚀 Pokretanje projekta
 
-### Korak 1 — Kloniraj repozitorij
+### Korak 1 - Kloniraj repozitorij
 
 ```bash
 git clone <url-repozitorija>
 cd gestatix
 ```
 
-### Korak 2 — Instaliraj biblioteke
+### Korak 2 - Instaliraj biblioteke
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Korak 3 — Pokreni inicijalizaciju projekta
+### Korak 3 - Pokreni inicijalizaciju projekta
 
 ```bash
 python backend/setup.py
@@ -109,13 +109,13 @@ Ovaj korak automatski:
 - Trenira ML model (ako ne postoji)
 - Gradi vektorsku bazu iz PDF-a (ako nije popunjena)
 
-### Korak 4 — Pokreni API server
+### Korak 4 - Pokreni API server
 
 ```bash
 python backend/app.py
 ```
 
-### Korak 5 — Otvori aplikaciju
+### Korak 5 - Otvori aplikaciju
 
 U browseru idi na:
 ```
@@ -143,7 +143,7 @@ Uspješno indeksirano X fragmenata.
 
 ---
 
-## 🧠 Kako funkcioniše? – STAL ciklus
+## 🧠 Kako funkcioniše? - STAL ciklus
 
 Gestatix koristi STAL ciklus – Sense, Think, Act, Learn:
 
