@@ -429,13 +429,6 @@ body {
     margin-bottom: 2rem;
 }
 
-.charts-single {
-    grid-template-columns: 1fr;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
 .chart-card--risk {
     min-height: 280px;
 }

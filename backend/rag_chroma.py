@@ -9,9 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
 hf_token = os.getenv("HF_TOKEN")
-print(f"Token je uspješno učitan!")
 
 # Globalni objekti - global objects for lazy loading
 _chroma_client = None
@@ -919,3 +917,4 @@ def test_rag_system(pdf_path: str = None):
 if __name__ == "__main__":
     pdf_file = "documents/Klinicki_vodic_za_antenatalnu_zastitu.pdf"
     test_rag_system(pdf_file)
+    print(f"Token je uspješno učitan!")

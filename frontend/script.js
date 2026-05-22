@@ -423,7 +423,8 @@ async function displayResults(riskData, ragText, inputData) {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.label}: ${context.raw.toFixed(1)}%`;
+                                const val = parseFloat(context.raw);
+                                return `${context.label}: ${isNaN(val) ? context.raw : val.toFixed(1)}%`;
                             }
                         }
                     }
@@ -804,7 +805,6 @@ function saveLastPrediction(riskData, inputData) {
         input_data: inputData,
         timestamp: new Date().toISOString()
     };
-    localStorage.setItem('lastPrediction', JSON.stringify(lastPredictionData));
 }
 
 // Slanje feedback-a na backend - Send feedback to backend
@@ -842,10 +842,6 @@ async function sendFeedback(userAgrees, correctRisk = null) {
             messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Hvala na povratnoj informaciji! Pomažete nam da poboljšamo model.';
             messageDiv.style.display = 'block';
             messageDiv.style.color = '#2e7d32';
-            
-            if (result.needs_retraining) {
-                messageDiv.innerHTML += `<br><i class="fas fa-sync-alt"></i> Model će biti poboljšan nakon ${result.retrain_threshold} prikupljenih feedbackova.`;
-            }
             
             loadFeedbackStats();
         } else {
@@ -1131,7 +1127,6 @@ async function triggerRetraining() {
         setTimeout(() => {
             showRetrainingStatus(false);
         }, 3000);
-        showRetrainingStatus(true, '<i class="fas fa-times-circle" style="color:#e91e63"></i> Greška pri poboljšanju modela.');
         setTimeout(() => showRetrainingStatus(false), 4000);
     }
 }

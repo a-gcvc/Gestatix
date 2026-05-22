@@ -6,13 +6,10 @@ Flask API za predikciju rizika trudnoće koristeći Random Forest model i RAG pr
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import joblib
-import numpy as np
-from datetime import datetime
 
 from model_utils import predict_risk, get_model_info
 from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
-from feedback_manager import get_feedback_manager, FeedbackManager
+from feedback_manager import get_feedback_manager
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -211,79 +208,6 @@ def retrain_model_endpoint():
         return jsonify(result), 200 if result['success'] else 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/model/features', methods=['GET'])
-def get_feature_importance():
-    """Endpoint za dohvatanje feature importance iz modela."""
-    try:
-        import joblib
-        import numpy as np
-        
-        model = joblib.load(os.path.join(BASE_DIR, 'models/rf_model.pkl'))
-        feature_cols = joblib.load(os.path.join(BASE_DIR, 'models/feature_cols_rf.pkl'))
-        
-        feature_importance = model.feature_importances_
-        
-        # Sortiraj po važnosti (opadajuće) - Sort by importance (descending)
-        sorted_indices = np.argsort(feature_importance)[::-1]
-        
-        result = {
-            'labels': [feature_cols[i] for i in sorted_indices],
-            'values': [feature_importance[i] for i in sorted_indices],
-            'percentages': [feature_importance[i] * 100 for i in sorted_indices]
-        }
-        
-        return jsonify(result), 200
-    except Exception as e:
-        print(f"Greška pri učitavanju feature importance: {e}")
-        # Fallback vrijednosti ako model nije dostupan - Fallback values if model is not available
-        return jsonify({
-            'labels': ['dijabetes', 'glukoza_u_krvi', 'otkucaji_srca', 'BMI', 'gestacijski_dijabetes'],
-            'values': [0.2262, 0.2159, 0.1464, 0.1438, 0.0959],
-            'percentages': [22.62, 21.59, 14.64, 14.38, 9.59]
-        }), 200
-
-@app.route('/predict_with_feedback', methods=['POST'])
-def predict_with_feedback():
-    """
-    Kombinovani endpoint: predikcija + opcioni feedback.
-    Ovo je proširena verzija /predict_with_rag koja također prikuplja feedback.
-    """
-    try:
-        data = request.get_json()
-        
-        # 1. Predikcija rizika - Risk prediction using Random Forest model
-        prediction_result = predict_risk(data)
-        
-        # 2. RAG preporuke - RAG recommendations from vector database
-        advice_text = get_relevant_advice_rag(
-            query_context=f"Trudnoća sa nivoom rizika {prediction_result['risk_level']}",
-            patient_data=data,
-            n_results=4
-        )
-        
-        response = {
-            'risk': prediction_result,
-            'rag_recommendations': advice_text,
-            'input_data': data,
-            'model_used': 'RandomForestClassifier'
-        }
-        
-        # 3. Ako je feedback zahtijevan, dodaj feedback ID - If feedback is requested, add feedback ID
-        if data.get('request_feedback', False):
-            response['feedback_id'] = datetime.now().timestamp()
-            response['feedback_prompt'] = {
-                'question': 'Da li se slažete sa procjenom rizika?',
-                'options': ['Da', 'Ne'],
-                'if_no': 'Molimo unesite tačan nivo rizika (Low/High)'
-            }
-        
-        return jsonify(response), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-
 
 if __name__ == '__main__':    
     app.run(debug=True, port=5000)
