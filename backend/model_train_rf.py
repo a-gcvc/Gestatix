@@ -12,9 +12,9 @@ from sklearn.preprocessing import LabelEncoder
 import joblib
 import os
 
-
 def load_and_prepare_data(csv_path='data/dataset.csv'):
-    """Učitava CSV, čisti podatke i priprema za trening. - Load CSV, clean data, and prepare for training."""
+    """Učitava CSV, čisti podatke i priprema za trening. 
+    Load CSV, clean data, and prepare for training."""
     
     df = pd.read_csv(csv_path)
     
@@ -82,11 +82,6 @@ def encode_target(y):
     Enkodira target varijablu sa eksplicitnim i garantovanim mappingom:
         Low  → 0
         High → 1
-
-    NAPOMENA: NE koristimo LabelEncoder.fit() jer on sortira alfabetski
-    što bi dalo High=0, Low=1 — suprotno od željenog.
-    Umjesto toga, koristimo eksplicitno mapiranje i ručno postavljamo
-    classes_ atribut kako bi label_encoder.inverse_transform() radio ispravno.
     """
     mapping = {'Low': 0, 'High': 1}
     y_encoded = y.map(mapping).values
@@ -108,7 +103,8 @@ def encode_target(y):
 
 
 def train_model():
-    """Glavna funkcija za trening i cuvanje Random Forest modela. - Main function for training and saving the Random Forest model."""
+    """Glavna funkcija za trening i cuvanje Random Forest modela. 
+    Main function for training and saving the Random Forest model."""
     
     print("\n" + "="*60)
     print("  RANDOM FOREST - TRENING MODELA")

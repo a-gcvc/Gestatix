@@ -17,7 +17,9 @@ _feature_cols = None
 
 
 def load_model_artifacts():
-    """Ucitava Random Forest model, label encoder i feature kolone."""
+    """Ucitava Random Forest model, label encoder i feature kolone.
+    Loads the Random Forest model, label encoder, and feature columns. 
+    """
     global _model, _label_encoder, _feature_cols
     
     if _model is None:
@@ -38,7 +40,8 @@ def load_model_artifacts():
 
 
 def preprocess_input(data_dict):
-    """Pretvara input dictionary u DataFrame spreman za predikciju."""
+    """Pretvara input dictionary u DataFrame spreman za predikciju.
+    Converts input dictionary into a DataFrame ready for prediction."""
     
     _, _, feature_cols = load_model_artifacts()
     
@@ -96,7 +99,9 @@ def predict_risk(data_dict):
 
 
 def predict_batch(data_list):
-    """Vraca predikcije za vise unosa."""
+    """Vraca predikcije za vise unosa.
+    Returns predictions for multiple inputs. 
+    """
     results = []
     for data in data_list:
         try:
@@ -107,7 +112,9 @@ def predict_batch(data_list):
 
 
 def get_model_info():
-    """Vraca informacije o ucitanom modelu."""
+    """Vraca informacije o ucitanom modelu.
+    Returns information about the loaded model.
+    """
     model, label_encoder, feature_cols = load_model_artifacts()
     
     return {

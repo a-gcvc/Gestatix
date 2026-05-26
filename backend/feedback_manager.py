@@ -10,14 +10,14 @@ import joblib
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 
-
 class FeedbackManager:
     def __init__(self, feedback_file='models/feedback_data.csv', 
                  model_path='models/rf_model.pkl',
                  feature_cols_path='models/feature_cols_rf.pkl',
                  retrain_threshold=10):
         """
-        Inicijalizacija Feedback Manager-a. - Initializes the Feedback Manager. Loads existing feedback data, model, and feature columns. Sets the retrain threshold for when to trigger model retraining based on new feedback samples.
+        Inicijalizacija Feedback Manager-a. 
+        Initializes the Feedback Manager. Loads existing feedback data, model, and feature columns. Sets the retrain threshold for when to trigger model retraining based on new feedback samples.
         """
         self.feedback_file = feedback_file
         self.model_path = model_path
@@ -34,13 +34,15 @@ class FeedbackManager:
         self.new_samples_count = self._count_new_samples()
     
     def _create_empty_feedback_df(self):
-        """Kreira prazan DataFrame za feedback podatke. - creates an empty DataFrame for feedback data with the appropriate columns."""
+        """Kreira prazan DataFrame za feedback podatke. 
+        Creates an empty DataFrame for feedback data with the appropriate columns."""
         columns = self.feature_cols + ['feedback_risk', 'original_prediction', 
                                        'user_confirmation', 'timestamp', 'trained']
         return pd.DataFrame(columns=columns)
     
     def _load_feedback_data(self):
-        """Učitava feedback podatke iz CSV fajla. - loads feedback data from a CSV file. If the file doesn't exist or is empty, it creates a new DataFrame with the appropriate columns."""
+        """Učitava feedback podatke iz CSV fajla. 
+        Loads feedback data from a CSV file. If the file doesn't exist or is empty, it creates a new DataFrame with the appropriate columns."""
         if os.path.exists(self.feedback_file) and os.path.getsize(self.feedback_file) > 0:
             try:
                 df = pd.read_csv(self.feedback_file)
@@ -61,7 +63,8 @@ class FeedbackManager:
         self.feedback_data.to_csv(self.feedback_file, index=False)
     
     def _count_new_samples(self):
-        """Broji koliko novih primjera ima od zadnjeg treninga. - counts how many new samples have been added since the last training."""
+        """Broji koliko novih primjera ima od zadnjeg treninga. 
+        Counts how many new samples have been added since the last training."""
         if len(self.feedback_data) == 0:
             return 0
         
@@ -73,7 +76,8 @@ class FeedbackManager:
     
     def add_feedback(self, input_data, original_prediction, user_agrees):
         """
-        Dodaje feedback korisnika u bazu. - Adds user feedback to the database. This should be called after the user provides feedback on a prediction. The 'input_data' should contain the feature values for the case, 'original_prediction' is what the model predicted, and 'user_agrees' is a boolean indicating whether the user agrees with the model's prediction or not.
+        Dodaje feedback korisnika u bazu. 
+        Adds user feedback to the database. 
         """
         # Kreiraj novi red - create a new row for the feedback data
         new_row = {}
@@ -115,7 +119,8 @@ class FeedbackManager:
     
     def update_feedback_risk(self, input_data, correct_risk):
         """
-        Ažurira feedback sa tačnim rizikom (kada se korisnik ne slaže). - Updates the feedback with the correct risk (when the user disagrees). This should be called after the user provides the correct risk level for a case they disagreed with.
+        Ažurira feedback sa tačnim rizikom (kada se korisnik ne slaže). 
+        Updates the feedback with the correct risk (when the user disagrees).
         """
         # Pronađi zadnji unos sa istim podacima i bez feedback_risk -  find the last entry with the same input data and no feedback risk set
         mask = (self.feedback_data['user_confirmation'] == False) & \
@@ -128,7 +133,8 @@ class FeedbackManager:
     
     def retrain_model(self, force=False):
         """
-        Ponovo trenira model koristeći originalne podatke + feedback podatke. - Retrains the model using original data + feedback data. If 'force' is True, it will retrain regardless of the number of new samples.
+        Ponovo trenira model koristeći originalne podatke + feedback podatke. 
+        Retrains the model using original data + feedback data. If 'force' is True, it will retrain regardless of the number of new samples.
         """
         if not force and self.new_samples_count < self.retrain_threshold:
             return {
@@ -226,7 +232,8 @@ class FeedbackManager:
         }
     
     def get_stats(self):
-        """Vraća statistike o feedback sistemu. - Returns statistics about the feedback system, including total feedback count, how many agreed/disagreed with the model, how many are pending correction, and how many have been used for training."""
+        """Vraća statistike o feedback sistemu. 
+        Returns statistics about the feedback system."""
         total_feedback = len(self.feedback_data)
         
         if total_feedback == 0:
@@ -257,65 +264,12 @@ class FeedbackManager:
             'needs_retraining': bool(self.new_samples_count >= self.retrain_threshold)
         }
 
-def _save_model_version(self, version_info=None):
-    """Čuva informacije o verziji modela. - saves model version information to a text file. - This should be called after retraining the model to keep track of the version and training details."""
-    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
-    
-    if version_info is None:
-        version_info = {
-            'version': self._get_next_version(),
-            'timestamp': datetime.now().isoformat(),
-            'total_samples': len(self.feedback_data),
-            'feedback_samples': len(self.feedback_data[self.feedback_data['feedback_risk'].notna()]) if len(self.feedback_data) > 0 else 0
-        }
-    
-    with open(version_file, 'w') as f:
-        f.write(f"Model Version: {version_info['version']}\n")
-        f.write(f"Trained: {version_info['timestamp']}\n")
-        f.write(f"Total Samples: {version_info['total_samples']}\n")
-        f.write(f"Feedback Samples: {version_info['feedback_samples']}\n")
-    
-    print(f"Verzija modela sačuvana: {version_info['version']}")
-
-def _get_next_version(self):
-    """Dohvata sljedeći broj verzije. - retrieves the next version number based on the existing version information. This is a simple implementation that increments the version number. In a real-world scenario, you might want to use a more robust versioning system."""
-    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
-    
-    if os.path.exists(version_file):
-        with open(version_file, 'r') as f:
-            for line in f:
-                if line.startswith('Model Version:'):
-                    current = line.split(':')[1].strip()
-                    try:
-                        # Ako je verzija broj (npr. 1, 2, 3...)
-                        next_version = int(current) + 1
-                        return str(next_version)
-                    except ValueError:
-                        # Ako je verzija u formatu v1.0, v2.0...
-                        import re
-                        match = re.search(r'(\d+)', current)
-                        if match:
-                            next_version = int(match.group(1)) + 1
-                            return f"v{next_version}.0"
-        return "2.0"
-    else:
-        return "1.0"
-
-def _load_model_version(self):
-    """Učitava informacije o verziji modela. - loads model version information from a text file."""
-    version_file = os.path.join(os.path.dirname(self.model_path), 'model_version.txt')
-    
-    if os.path.exists(version_file):
-        with open(version_file, 'r') as f:
-            content = f.read()
-        return content
-    return "No version info available"
-
 # Globalna instanca
 _feedback_manager = None
 
 def get_feedback_manager():
-    """Dohvata ili kreira globalnu instancu FeedbackManager-a. - Retrieves or creates a global instance of the FeedbackManager. This ensures that we have a single instance managing the feedback data and model retraining across the application."""
+    """Dohvata ili kreira globalnu instancu FeedbackManager-a. 
+    Retrieves or creates a global instance of the FeedbackManager. This ensures that we have a single instance managing the feedback data and model retraining across the application."""
     global _feedback_manager
     if _feedback_manager is None:
         _feedback_manager = FeedbackManager()

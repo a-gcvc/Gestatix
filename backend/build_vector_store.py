@@ -15,7 +15,7 @@ def main():
     print("  IZGRADNJA VEKTORSKE BAZE ZA RAG SISTEM")
     print("="*60)
     
-    # Putanja do PDF fajla (jezik: bosanski/hrvatski/srpski) - path to PDF file (language: Bosnian/Croatian/Serbian)
+    # Putanja do PDF fajla - path to PDF file 
     pdf_path = os.path.join(BASE_DIR, "documents", "Klinicki_vodic_za_antenatalnu_zastitu.pdf")
     
     # Provjeri da li PDF postoji - check if PDF exists

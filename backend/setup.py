@@ -24,11 +24,7 @@ MODEL_PATH    = os.path.join(BASE_DIR, "models", "rf_model.pkl")
 ENCODER_PATH  = os.path.join(BASE_DIR, "models", "label_encoder_rf.pkl")
 FEATURES_PATH = os.path.join(BASE_DIR, "models", "feature_cols_rf.pkl")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 1. PROVJERA PYTHON VERZIJE
-# ─────────────────────────────────────────────────────────────────────────────
-
 def check_python_version():
     major, minor = sys.version_info[:2]
     print(f"  Python verzija: {major}.{minor}")
@@ -37,11 +33,7 @@ def check_python_version():
         sys.exit(1)
     print("  Python verzija: OK")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 2. PROVJERA BIBLIOTEKA
-# ─────────────────────────────────────────────────────────────────────────────
-
 REQUIRED_PACKAGES = [
     ("flask",                 "Flask"),
     ("flask_cors",            "flask-cors"),
@@ -70,11 +62,7 @@ def check_packages():
 
     print("  Sve biblioteke: OK")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 3. PROVJERA .env FAJLA
-# ─────────────────────────────────────────────────────────────────────────────
-
 def check_env_file():
     env_path         = os.path.join(BASE_DIR, ".env")
     env_example_path = os.path.join(BASE_DIR, ".env.example")
@@ -93,11 +81,7 @@ def check_env_file():
     else:
         print("  .env fajl: OK")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 4. PROVJERA PDF DOKUMENTA
-# ─────────────────────────────────────────────────────────────────────────────
-
 def check_pdf():
     if not os.path.exists(PDF_PATH):
         print(f"\n  UPOZORENJE: PDF nije pronađen na putanji: {PDF_PATH}")
@@ -163,11 +147,7 @@ def _create_demo_pdf():
     c.save()
     print(f"  Demo PDF kreiran: {PDF_PATH}")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # 5. TRENIRANJE MODELA
-# ─────────────────────────────────────────────────────────────────────────────
-
 def check_and_train_model():
     if all(os.path.exists(p) for p in [MODEL_PATH, ENCODER_PATH, FEATURES_PATH]):
         print("  ML model: OK (već postoji)")
@@ -190,10 +170,7 @@ def check_and_train_model():
         sys.exit(1)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 6. IZGRADNJA VEKTORSKE BAZE
-# ─────────────────────────────────────────────────────────────────────────────
-
 def _baza_ima_dokumente() -> bool:
     """Provjerava da li vektorska baza stvarno sadrži dokumente."""
     try:
@@ -229,11 +206,7 @@ def check_and_build_vector_store(pdf_dostupan: bool):
         print(f"  GREŠKA pri izgradnji vektorske baze: {e}")
         sys.exit(1)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # MAIN
-# ─────────────────────────────────────────────────────────────────────────────
-
 def main():
     print("\n" + "="*60)
     print("  INICIJALIZACIJA PROJEKTA")

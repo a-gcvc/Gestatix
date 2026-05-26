@@ -31,10 +31,7 @@ GUIDE_INFO = {
     'version': '3.0'
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
 # KLINIČKI PRAGOVI (referentne vrijednosti za interpretaciju parametara) - clinical thresholds for interpreting patient parameters
-# ─────────────────────────────────────────────────────────────────────────────
-
 CLINICAL_THRESHOLDS = {
     'glukoza': {
         'normalna':    (3.9, 5.5),
@@ -79,18 +76,15 @@ CLINICAL_THRESHOLDS = {
 
 
 def _klasifikuj_parametar(vrijednost: float, parametar: str) -> str:
-    """Vraća kliničku klasifikaciju za dati parametar i vrijednost. - Returns clinical classification for a given parameter and value."""
+    """Vraća kliničku klasifikaciju za dati parametar i vrijednost. 
+    Returns clinical classification for a given parameter and value."""
     pragovi = CLINICAL_THRESHOLDS.get(parametar, {})
     for naziv, (min_v, max_v) in pragovi.items():
         if min_v <= vrijednost < max_v:
             return naziv
     return 'nepoznato'
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # LAZY LOADING MODELA I CHROMA KLIJENTA - lazy loading of embedding model and Chroma client
-# ─────────────────────────────────────────────────────────────────────────────
-
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
@@ -140,12 +134,7 @@ def _chroma_embedding_function(texts: List[str]) -> List[List[float]]:
     embeddings = model.encode(texts, convert_to_numpy=True)
     return embeddings.tolist()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # ČIŠĆENJE I VALIDACIJA TEKSTA - text cleaning and validation
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Izrazi koji označavaju referencu na tabelu (koje ne možemo prikazati) - expressions indicating reference to tables (which we cannot display)
 _TABLE_PATTERNS = re.compile(
     r'(tabela|tablica|tabla|table|slika|grafikon|prilog|aneks|appendix'
     r'|vidjeti tabelu|prema tabeli|u tabeli|tabeli \d|tabela \d'
@@ -158,7 +147,8 @@ _MIN_SENTENCE_LENGTH = 40
 
 
 def _sadrzi_referencu_na_tabelu(tekst: str) -> bool:
-    """Vraća True ako tekst sadrži referencu na tabelu/grafikon koji ne možemo prikazati. Returns True if the text contains a reference to a table/figure that we cannot display."""
+    """Vraća True ako tekst sadrži referencu na tabelu/grafikon koji ne možemo prikazati. 
+    Returns True if the text contains a reference to a table/figure that we cannot display."""
     return bool(_TABLE_PATTERNS.search(tekst))
 
 
@@ -176,7 +166,8 @@ def _pocinje_cjelovitom_recenicom(tekst: str) -> bool:
 
 def _zavrsava_cjelovitom_recenicom(tekst: str) -> bool:
     """
-    Provjera da li chunk završava cjelovitom rečenicom. - Check if the chunk ends with a complete sentence.
+    Provjera da li chunk završava cjelovitom rečenicom. 
+    Check if the chunk ends with a complete sentence.
     """
     tekst = tekst.strip()
     if not tekst:
@@ -192,7 +183,6 @@ def _popravi_chunk(tekst: str) -> str:
     - Uklanja rečenice koje referenciraju tabele 
         
     - Returns the cleaned chunk or an empty string if it cannot be fixed.
-
     """
     tekst = tekst.strip()
 
@@ -234,6 +224,7 @@ def _popravi_chunk(tekst: str) -> str:
 def _validiraj_i_popravi_chunk(tekst: str) -> str:
     """
     Glavni validator chunka. Vraća očišćen tekst ili prazan string ako chunk nije upotrebljiv.
+    Main chunk validator. Returns cleaned text or an empty string if the chunk is not usable.
     """
     if not tekst or len(tekst) < _MIN_SENTENCE_LENGTH:
         return ""
@@ -254,11 +245,7 @@ def _validiraj_i_popravi_chunk(tekst: str) -> str:
 
     return tekst.strip()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # CHUNKING PDF-A - chunking the PDF
-# ─────────────────────────────────────────────────────────────────────────────
-
 def chunk_text(text: str, chunk_size: int = 600, overlap: int = 100) -> List[str]:
     """
     Dijeli tekst na fragmente koji završavaju na granicama rečenica.
@@ -298,7 +285,8 @@ def chunk_text(text: str, chunk_size: int = 600, overlap: int = 100) -> List[str
 
 
 def load_pdf_to_chunks(pdf_path: str) -> List[Dict[str, Any]]:
-    """Učitava PDF i dijeli ga na čiste, cjelovite fragmente. - Loads a PDF and splits it into clean, complete chunks."""
+    """Učitava PDF i dijeli ga na čiste, cjelovite fragmente. 
+    Loads a PDF and splits it into clean, complete chunks."""
     try:
         from PyPDF2 import PdfReader
     except ImportError:
@@ -336,7 +324,8 @@ def load_pdf_to_chunks(pdf_path: str) -> List[Dict[str, Any]]:
 
 
 def build_vector_store_from_pdf(pdf_path: str, force_rebuild: bool = False):
-    """Gradi vektorsku bazu iz PDF dokumenta. - Builds a vector store from a PDF document."""
+    """Gradi vektorsku bazu iz PDF dokumenta. 
+    Builds a vector store from a PDF document."""
     if force_rebuild:
         delete_collection()
 
@@ -377,13 +366,11 @@ def build_vector_store_from_pdf(pdf_path: str, force_rebuild: bool = False):
     print(f"\nUspješno indeksirano {len(documents)} fragmenata.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # SEMANTIČKA PRETRAGA - semantic search
-# ─────────────────────────────────────────────────────────────────────────────
-
 def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict[str, Any]]:
     """
-    Semantička pretraga sa filtriranjem po relevantnosti i kvalitetu teksta. - Semantic search with relevance and text quality filtering.
+    Semantička pretraga sa filtriranjem po relevantnosti i kvalitetu teksta. 
+    Semantic search with relevance and text quality filtering.
     """
     collection = get_collection()
 
@@ -424,12 +411,7 @@ def semantic_search(query: str, n_results: int = DEFAULT_N_RESULTS) -> List[Dict
 
     return formatted_results
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # PERSONALIZOVANI UPITI NA OSNOVU PARAMETARA PACIJENTICE - personalized queries based on patient parameters
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 def _bp_klasa_opis(klasa_s: str, klasa_d: str) -> str:
     """Vraća čitljiv opis kategorije krvnog tlaka na osnovu ESH/ESC klasifikacije."""
     # Uzmi goru od dvije klase (ako su različite, uzmi onu koja je "lošija") - Take the worse of the two classes (if different, take the one that is "worse")
@@ -683,11 +665,7 @@ def build_semantic_query_bhs(patient_data: dict, context: str = "") -> str:
 
     return " ".join(query_parts)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # MULTI-QUERY PRETRAGA - multi-query search
-# ─────────────────────────────────────────────────────────────────────────────
-
 def _multi_query_search(patient_data: dict, n_results_per_query: int = 5) -> List[Dict[str, Any]]:
     """
     Radi više ciljanih pretraga (po jednu za svaki faktor rizika) i
@@ -730,11 +708,7 @@ def _multi_query_search(patient_data: dict, n_results_per_query: int = 5) -> Lis
     svi_rezultati.sort(key=lambda x: x.get('weighted_score', 0), reverse=True)
     return svi_rezultati
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # FORMATIRANJE PREPORUKA I PERSONALIZOVANI UVOD - formatting recommendations and personalized introduction
-# ─────────────────────────────────────────────────────────────────────────────
-
 def get_guide_header(risk_level: str = "Low") -> str:
     """Vraća uvodni tekst o nivou rizika. - Returns an introductory text about the risk level."""
     if "High" in str(risk_level) or "VISOK" in str(risk_level).upper():
@@ -844,13 +818,10 @@ def get_relevant_advice_rag(query_context: str, patient_data: dict, n_results: i
 
     return "\n".join(dijelovi)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # TESTIRANJE RAG SISTEMA - testing the RAG system
-# ─────────────────────────────────────────────────────────────────────────────
-
 def test_rag_system(pdf_path: str = None):
-    """Testira poboljšani RAG sistem. - Tests the improved RAG system."""
+    """Testira poboljšani RAG sistem. 
+    Tests the improved RAG system."""
     print("\n" + "="*60)
     print("TESTIRANJE POBOLJŠANOG RAG SISTEMA")
     print("="*60)

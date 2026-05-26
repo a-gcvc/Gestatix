@@ -1,14 +1,8 @@
-"""
-app.py
-Flask API za predikciju rizika trudnoće koristeći Random Forest model i RAG preporuke.
-"""
-
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-
 from model_utils import predict_risk, get_model_info
-from rag_chroma import get_relevant_advice_rag, semantic_search, build_semantic_query_bhs
+from rag_chroma import get_relevant_advice_rag, semantic_search
 from feedback_manager import get_feedback_manager
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,9 +40,7 @@ def health_check():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """
-    Endpoint za predikciju rizika i preporuke.
-    """
+    """Endpoint za predikciju rizika i preporuke."""
     try:
         data = request.get_json()
         
@@ -82,9 +74,7 @@ def predict():
 
 @app.route('/predict_batch', methods=['POST'])
 def predict_batch():
-    """
-    Endpoint za batch predikciju.
-    """
+    """Endpoint za batch predikciju."""
     try:
         data_list = request.get_json()
         
@@ -102,9 +92,7 @@ def predict_batch():
 
 @app.route('/rag/search', methods=['POST'])
 def rag_search():
-    """
-    Endpoint za semantičku pretragu baze znanja.
-    """
+    """Endpoint za semantičku pretragu baze znanja."""
     try:
         data = request.get_json()
         query = data.get('query', '')
@@ -127,9 +115,7 @@ def rag_search():
 
 @app.route('/predict_with_rag', methods=['POST'])
 def predict_with_rag():
-    """
-    Kombinovani endpoint: predikcija rizika + RAG preporuke iz PDF baze.
-    """
+    """Kombinovani endpoint: predikcija rizika + RAG preporuke iz PDF baze."""
     try:
         data = request.get_json()
         
@@ -157,9 +143,7 @@ def predict_with_rag():
 
 @app.route('/feedback/submit', methods=['POST'])
 def submit_feedback():
-    """
-    Endpoint za prikupljanje feedback-a od korisnika.
-    """
+    """Endpoint za prikupljanje feedback-a od korisnika."""
     try:
         data = request.get_json()
         
@@ -197,9 +181,7 @@ def feedback_stats():
 
 @app.route('/feedback/retrain', methods=['POST'])
 def retrain_model_endpoint():
-    """
-    Endpoint za ručno pokretanje retraining-a modela.
-    """
+    """Endpoint za ručno pokretanje retraining-a modela."""
     try:
         data = request.get_json() or {}
         force = data.get('force', False)

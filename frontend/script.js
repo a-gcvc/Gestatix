@@ -391,10 +391,8 @@ async function displayResults(riskData, ragText, inputData) {
     if (confidenceSpan) confidenceSpan.innerText = `${confidence}%`;
     if (confidenceBar) confidenceBar.style.width = `${confidence}%`;
     
-    // ============================================================
     // PIE CHART sa procentima i responzivnošću - PIE CHART with percentages and responsiveness
-    // ============================================================
-    
+   
     const isMobile = window.innerWidth < 768;
     
     const ctx = document.getElementById('riskChart');
@@ -498,11 +496,7 @@ async function displayResults(riskData, ragText, inputData) {
     }
 }
 
-
-// ============================================================
-// PERSONALIZOVANI VIZUALNI PRIKAZ PARAMETARA PACIJENTICE
-// ============================================================
-
+// PERSONALIZOVANI VIZUALNI PRIKAZ PARAMETARA PACIJENTICE - PERSONALIZED VISUAL DISPLAY OF PATIENT PARAMETERS
 function renderParameterGauges(inputData, riskLevel) {
     const container = document.getElementById('parameter-gauges');
     if (!container) return;
@@ -1020,11 +1014,7 @@ function resetAndShowForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-
-// ============================================================
 // SENSE - THINK - ACT - LEARN CIKLUS
-// ============================================================
-
 // Opisi za svaku fazu - Descriptions for each phase
 const cycleDescriptions = {
     sense: {
@@ -1057,13 +1047,13 @@ const cycleDescriptions = {
             "Vizuelni prikaz nivoa rizika (crveni/zeleni indikator)",
             "Preporuke iz kliničkog vodiča za antenatalnu zaštitu",
             "Semantička pretraga pronalazi relevantne dijelove dokumenta",
-            "Prikazuje relevantnost pronađenih informacija (80%+)"
+            "Prikazuje relevantnost pronađenih informacija (70%+)"
         ]
     },
     learn: {
         title: "LEARN - Kontinuirano učenje",
         icon: "fa-graduation-cap",
-        description: "Sistem uči iz svake interakcije. Korisnici daju povratnu informaciju o tačnosti predikcije, što se čuva u bazi. Administrator može pokrenuti poboljšanje modela jednim klikom na dugme.",
+        description: "Sistem uči iz svake interakcije. Korisnici daju povratnu informaciju o tačnosti predikcije, što se čuva u bazi. Korisnik može pokrenuti poboljšanje modela jednim klikom na dugme.",
         details: [
             "Feedback sistem prikuplja povratne informacije",
             "Podaci se čuvaju u zasebnom fajlu za retraining",
@@ -1215,11 +1205,8 @@ async function loadStalStats() {
     }
 }
 
-// ============================================================
 // INICIJALIZACIJA — svi event listeneri registrovani JEDNOM, unutar DOMContentLoaded kako bi DOM bio siguran dostupan 
 // INITIALIZATION — all event listeners registered ONCE, within DOMContentLoaded to ensure DOM is safely accessible
-// ============================================================
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Inicijalni prikaz — forma vidljiva, rezultati skriveni - Initial display — form visible, results hidden
