@@ -100,7 +100,8 @@ pip install -r requirements.txt
 ### Korak 3 - Pokreni inicijalizaciju projekta
 
 ```bash
-python backend/setup.py
+cd backend
+python setup.py
 ```
 
 Ovaj korak automatski:
