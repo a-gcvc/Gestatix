@@ -1204,9 +1204,8 @@ async function loadStalStats() {
                 stalStatsDiv.innerHTML = `
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem;">
                         <span><i class="fas fa-comments"></i> Feedback: ${stats.total_feedback || 0}</span>
-                        <span><i class="fas fa-check-circle"></i> Tačnih: ${stats.agreed_with_model || 0}</span>
-                        <span><i class="fas fa-times-circle"></i> Netačnih: ${stats.disagreed_with_model || 0}</span>
-                        <span><i class="fas fa-sync-alt"></i> Nova za učenje: ${stats.new_samples_pending || 0}/${stats.retrain_threshold || 10}</span>
+                        <span><i class="fas fa-check-circle"></i> Pozitivnih: ${stats.agreed_with_model || 0}</span>
+                        <span><i class="fas fa-times-circle"></i> Negativnih: ${stats.disagreed_with_model || 0}</span>
                     </div>
                 `;
             }
