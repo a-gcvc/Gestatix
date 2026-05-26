@@ -113,7 +113,6 @@ Ovaj korak automatski:
 ### Korak 4 - Pokreni API server
 
 ```bash
-cd backend
 python app.py
 ```
 
