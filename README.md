@@ -5,7 +5,18 @@
 **Gestatix** je inteligentni klinički asistent dizajniran za predviđanje komplikacija u trudnoći i pružanje smjernica zasnovanih na medicinskim protokolima.  
 Kombinujući **mašinsko učenje (Random Forest)** i **semantičku pretragu (RAG)** nad kliničkim vodičem, Gestatix pomaže trudnicama i medicinskom osoblju da procijene rizik i dobiju personalizovane preporuke.
 
----
+## 📺 Video prezentacija
+
+[![Prezentacija projekta](https://img.youtube.com/vi/qGnN_lB0lNc/0.jpg)](https://www.youtube.com/watch?v=qGnN_lB0lNc&t=19070s)
+
+**Šta se pokriva u videu:**
+- 5:17:50 - Uvod i problematika
+- 5:21:15 - Arhitektura rješenja
+- 5:23:40 - Demonstracija
+- 5:25:10 - Zaključak
+
+**Linkovi:**
+- [🎬 Početak prezentacije projekta (5:17:50)](https://www.youtube.com/watch?v=qGnN_lB0lNc&t=19070s)
 
 ## 📋 Preduslovi
 
